@@ -1,4 +1,7 @@
 data/
+models/
+*.sublime-project
+*.sublime-workspace
 
 # === Automatically generated ===
 # Byte-compiled / optimized / DLL files
