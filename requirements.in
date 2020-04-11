@@ -2,6 +2,5 @@ numpy
 pandas
 jupyterlab
 librosa
-keras
 sklearn
 
