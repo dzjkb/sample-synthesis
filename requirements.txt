@@ -12,6 +12,7 @@ cffi==1.14.0              # via soundfile
 decorator==4.4.2          # via ipython, librosa, traitlets
 defusedxml==0.6.0         # via nbconvert
 entrypoints==0.3          # via nbconvert
+h5py==2.10.0              # via keras, keras-applications
 ipykernel==5.2.0          # via notebook
 ipython-genutils==0.2.0   # via nbformat, notebook, traitlets
 ipython==7.13.0           # via ipykernel
@@ -24,6 +25,9 @@ jupyter-client==6.1.2     # via ipykernel, notebook
 jupyter-core==4.6.3       # via jupyter-client, nbconvert, nbformat, notebook
 jupyterlab-server==1.0.7  # via jupyterlab
 jupyterlab==2.0.1         # via -r requirements.in
+keras-applications==1.0.8  # via keras
+keras-preprocessing==1.1.0  # via keras
+keras==2.3.1              # via -r requirements.in
 librosa==0.7.2            # via -r requirements.in
 llvmlite==0.31.0          # via numba
 markupsafe==1.1.1         # via jinja2
@@ -32,7 +36,7 @@ nbconvert==5.6.1          # via notebook
 nbformat==5.0.5           # via nbconvert, notebook
 notebook==6.0.3           # via jupyterlab, jupyterlab-server
 numba==0.48.0             # via librosa, resampy
-numpy==1.18.2             # via -r requirements.in, librosa, numba, pandas, resampy, scikit-learn, scipy
+numpy==1.18.2             # via -r requirements.in, h5py, keras, keras-applications, keras-preprocessing, librosa, numba, pandas, resampy, scikit-learn, scipy
 pandas==1.0.3             # via -r requirements.in
 pandocfilters==1.4.2      # via nbconvert
 parso==0.6.2              # via jedi
@@ -46,12 +50,14 @@ pygments==2.6.1           # via ipython, nbconvert
 pyrsistent==0.16.0        # via jsonschema
 python-dateutil==2.8.1    # via jupyter-client, pandas
 pytz==2019.3              # via pandas
+pyyaml==5.3.1             # via keras
 pyzmq==19.0.0             # via jupyter-client, notebook
 resampy==0.2.2            # via librosa
-scikit-learn==0.22.2.post1  # via librosa
-scipy==1.4.1              # via librosa, resampy, scikit-learn
+scikit-learn==0.22.2.post1  # via librosa, sklearn
+scipy==1.4.1              # via keras, librosa, resampy, scikit-learn
 send2trash==1.5.0         # via notebook
-six==1.14.0               # via bleach, jsonschema, librosa, pyrsistent, python-dateutil, resampy, traitlets
+six==1.14.0               # via bleach, h5py, jsonschema, keras, keras-preprocessing, librosa, pyrsistent, python-dateutil, resampy, traitlets
+sklearn==0.0              # via -r requirements.in
 soundfile==0.10.3.post1   # via librosa
 terminado==0.8.3          # via notebook
 testpath==0.4.4           # via nbconvert
