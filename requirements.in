@@ -3,4 +3,5 @@ pandas
 jupyterlab
 librosa
 sklearn
-
+tqdm
+six
