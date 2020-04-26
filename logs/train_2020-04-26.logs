@@ -1,0 +1,85 @@
+[2020-04-26 17:28:41,286 train] INFO - starting run snares_small_17-28-41
+[2020-04-26 17:28:41,286 train] DEBUG - seed set to 420
+[2020-04-26 17:28:41,287 train] DEBUG - cuda set to False
+[2020-04-26 17:29:17,952 train] INFO - starting run snares_small_17-29-17
+[2020-04-26 17:29:17,953 train] DEBUG - seed set to 420
+[2020-04-26 17:29:17,953 train] DEBUG - cuda set to False
+[2020-04-26 17:32:43,001 train] INFO - starting run snares_small_17-32-43
+[2020-04-26 17:32:43,001 train] DEBUG - seed set to 420
+[2020-04-26 17:32:43,001 train] DEBUG - cuda set to False
+[2020-04-26 17:33:09,051 train] INFO - starting run snares_small_17-33-09
+[2020-04-26 17:33:09,052 train] DEBUG - seed set to 420
+[2020-04-26 17:33:09,052 train] DEBUG - cuda set to False
+[2020-04-26 17:33:30,437 train] INFO - starting run snares_small_17-33-30
+[2020-04-26 17:33:30,438 train] DEBUG - seed set to 420
+[2020-04-26 17:33:30,438 train] DEBUG - cuda set to False
+[2020-04-26 17:33:47,746 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:33:47,747 train] DEBUG - sample length 1.0
+[2020-04-26 17:33:47,747 train] DEBUG - sampling rate 11025
+[2020-04-26 17:33:47,747 train] DEBUG - batch size 16
+[2020-04-26 17:35:08,558 train] INFO - starting run snares_small_17-35-08
+[2020-04-26 17:35:08,559 train] DEBUG - seed set to 420
+[2020-04-26 17:35:08,559 train] DEBUG - cuda set to False
+[2020-04-26 17:35:26,638 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:35:26,638 train] DEBUG - sample length 1.0
+[2020-04-26 17:35:26,638 train] DEBUG - sampling rate 11025
+[2020-04-26 17:35:26,638 train] DEBUG - batch size 16
+[2020-04-26 17:35:27,357 train] INFO - starting training for 20 epochs
+[2020-04-26 17:36:39,328 train] INFO - starting run snares_small_17-36-39
+[2020-04-26 17:36:39,329 train] DEBUG - seed set to 420
+[2020-04-26 17:36:39,329 train] DEBUG - cuda set to False
+[2020-04-26 17:36:55,952 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:36:55,952 train] DEBUG - sample length 1.0 seconds
+[2020-04-26 17:36:55,953 train] DEBUG - sampling rate 11025 Hz
+[2020-04-26 17:36:55,953 train] DEBUG - batch size 16
+[2020-04-26 17:36:56,630 train] INFO - starting training for 20 epochs
+[2020-04-26 17:38:57,344 train] INFO - ========================================
+[2020-04-26 17:38:57,344 train] INFO - 
+[2020-04-26 17:38:57,344 train] INFO - ======= starting run snares_small_17-38-57 ========
+[2020-04-26 17:38:57,345 train] DEBUG - seed set to 420
+[2020-04-26 17:38:57,345 train] DEBUG - cuda set to False
+[2020-04-26 17:39:14,012 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:39:14,012 train] DEBUG - sample length 1.0 seconds
+[2020-04-26 17:39:14,013 train] DEBUG - sampling rate 11025 Hz
+[2020-04-26 17:39:14,013 train] DEBUG - batch size 16
+[2020-04-26 17:39:14,676 train] INFO - starting training for 20 epochs
+[2020-04-26 17:48:42,114 train] INFO - ========================================
+[2020-04-26 17:48:42,114 train] INFO - 
+[2020-04-26 17:48:42,114 train] INFO - ======= starting run snares_small_17-48-42 ========
+[2020-04-26 17:48:42,114 train] DEBUG - seed set to 420
+[2020-04-26 17:48:42,115 train] DEBUG - cuda set to False
+[2020-04-26 17:48:58,435 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:48:58,436 train] DEBUG - sample length 1.0 seconds
+[2020-04-26 17:48:58,436 train] DEBUG - sampling rate 11025 Hz
+[2020-04-26 17:48:58,436 train] DEBUG - batch size 16
+[2020-04-26 17:48:59,113 train] INFO - starting training for 20 epochs
+[2020-04-26 17:49:32,591 train] INFO - ========================================
+[2020-04-26 17:49:32,591 train] INFO - 
+[2020-04-26 17:49:32,591 train] INFO - ======= starting run snares_small_17-49-32 ========
+[2020-04-26 17:49:32,592 train] DEBUG - seed set to 420
+[2020-04-26 17:49:32,592 train] DEBUG - cuda set to False
+[2020-04-26 17:49:51,556 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:49:51,557 train] DEBUG - sample length 1.0 seconds
+[2020-04-26 17:49:51,558 train] DEBUG - sampling rate 11025 Hz
+[2020-04-26 17:49:51,558 train] DEBUG - batch size 16
+[2020-04-26 17:49:52,227 train] INFO - starting training for 20 epochs
+[2020-04-26 17:50:12,291 train] INFO - ========================================
+[2020-04-26 17:50:12,291 train] INFO - 
+[2020-04-26 17:50:12,291 train] INFO - ======= starting run snares_small_17-50-12 ========
+[2020-04-26 17:50:12,292 train] DEBUG - seed set to 420
+[2020-04-26 17:50:12,292 train] DEBUG - cuda set to False
+[2020-04-26 17:50:29,219 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:50:29,219 train] DEBUG - sample length 1.0 seconds
+[2020-04-26 17:50:29,219 train] DEBUG - sampling rate 11025 Hz
+[2020-04-26 17:50:29,219 train] DEBUG - batch size 16
+[2020-04-26 17:50:29,898 train] INFO - starting training for 20 epochs
+[2020-04-26 17:51:34,163 train] INFO - ========================================
+[2020-04-26 17:51:34,163 train] INFO - 
+[2020-04-26 17:51:34,163 train] INFO - ======= starting run snares_small_17-51-34 ========
+[2020-04-26 17:51:34,164 train] DEBUG - seed set to 420
+[2020-04-26 17:51:34,164 train] DEBUG - cuda set to False
+[2020-04-26 17:51:50,526 train] DEBUG - loading dataset from data/interim/snares_small (0.1 test split) with
+[2020-04-26 17:51:50,526 train] DEBUG - sample length 1.0 seconds
+[2020-04-26 17:51:50,527 train] DEBUG - sampling rate 11025 Hz
+[2020-04-26 17:51:50,527 train] DEBUG - batch size 16
+[2020-04-26 17:51:51,193 train] INFO - starting training for 20 epochs

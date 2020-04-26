@@ -1,6 +1,7 @@
 data/
 !src/data/
 models/
+!src/models/
 *.sublime-project
 *.sublime-workspace
 

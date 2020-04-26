@@ -1,13 +1,13 @@
 import numpy as np
 
 from pathlib import Path
-from torch.utils.data import TensorDataset
+from torch.utils.data import Dataset
 from torch import tensor
 
-from preprocessing import load_raw
+from .preprocessing import load_raw
 
 
-class AudioDataset(TensorDataset):
+class AudioDataset(Dataset):
     """ Dataset subclass loading a whole directory of audio files
         into memory at once
 
@@ -21,9 +21,14 @@ class AudioDataset(TensorDataset):
     def __init__(self, directory, maxlen=1, sampling_rate=DEFAULT_SR):
         def getsample(path):
             s = load_raw(path, sampling_rate)
-            s = np.resize((sampling_rate * maxlen))
+            s.resize(int(sampling_rate * maxlen))
             return s
 
         xs = np.array([getsample(p) for p in Path(directory).glob('*')])
+        self.xs = tensor(xs)
 
-        super(AudioDataset, self).__init__(tensor(xs))
+    def __len__(self):
+        return len(self.xs)
+
+    def __getitem__(self, index):
+        return self.xs[index]

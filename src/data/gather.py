@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from shutil import copy
 from glob import iglob
 
-from fs_utils import git_root
+from .fs_utils import git_root
 
 
 GIT_ROOT = git_root()

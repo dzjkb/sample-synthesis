@@ -1,0 +1,12 @@
+{
+    "dataset_dir": "data/interim/snares_small",
+    "seed": 420,
+    "cuda": false,
+    "sample_length": 1.0,
+    "sampling_rate": 11025,
+    "batch_size": 16,
+    "test_split":0.1,
+    "epochs": 20,
+    "output_prefix": "snares_small",
+    "log_level": "DEBUG"
+}
