@@ -31,7 +31,11 @@ def main(
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
     run_name = f"{run_name}_{run_timestamp}"
 
-    logger.info(f"Starting run {run_name} with config")
+    logger.info("")
+    logger.info("==============================")
+    logger.info(f"Starting run {run_name}")
+    logger.info("==============================")
+    logger.info("")
     logger.debug(f"{run_name=}")
     logger.debug(f"{dataset=}")
     logger.debug(f"{lr=}")
@@ -39,7 +43,6 @@ def main(
     logger.debug(f"{example_secs=}")
     logger.debug(f"{sample_rate=}")
     logger.debug(f"{frame_rate=}")
-    logger.info("===================================")
 
     # ====== training
     strategy = train_util.get_strategy()  # default tf.distribute.MirroredStrategy()
