@@ -4,6 +4,8 @@ models/
 !src/models/
 *.sublime-project
 *.sublime-workspace
+conf/
+logs/
 
 # === Automatically generated ===
 # Byte-compiled / optimized / DLL files

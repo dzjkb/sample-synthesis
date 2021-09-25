@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import subprocess
+import argparse
+import yaml
+
+
+DATA_ROOT="./data"
+
+
+def main(
+    dataset,
+    sample_rate,
+    example_secs,
+    frame_rate,
+    **kwargs,
+):
+    subprocess.run([
+        "ddsp_prepare_tfrecord",
+        "--input_audio_filepatterns", f"{DATA_ROOT}/interim/{dataset}/*",
+        "--output_tfrecord_path", f"{DATA_ROOT}/processed/{dataset}.tfrecord",
+        "--sample_rate", f"{sample_rate}",
+        "--coarse_chunk_secs", "0",
+        "--example_secs", f"{example_secs}",
+        "--sliding_window_hop_secs", f"{example_secs * 5}",  # supposed to be longer than the sample
+        "--frame_rate", f"{frame_rate}",
+        "--num_shards=10",
+        "--alsologtostderr",
+    ])
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cfg", "-c", type=str)
+    args = parser.parse_args()
+
+    with open(args.cfg) as cfg_f:
+        cfg = yaml.load(cfg_f, Loader=yaml.FullLoader)
+
+    main(**cfg)
