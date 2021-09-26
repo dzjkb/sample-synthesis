@@ -25,7 +25,8 @@ def get_model(time_steps, sample_rate, n_samples):
                                     sample_rate=sample_rate,
                                     name='harmonic')
 
-    noise = ddsp.synths.FilteredNoise(window_size=0,
+    noise = ddsp.synths.FilteredNoise(n_samples=n_samples,
+                                      window_size=0,
                                       initial_bias=-10.0,
                                       name='noise')
     add = ddsp.processors.Add(name='add')
