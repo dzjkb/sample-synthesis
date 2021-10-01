@@ -74,7 +74,7 @@ def main(
             res_str += '{}: {:.2f}\t'.format(k, v)
         logger.info(res_str)
 
-    save_model(model, run_name)
+    save_model(trainer, run_name)
 
 
 if __name__ == '__main__':

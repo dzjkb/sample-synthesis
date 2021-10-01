@@ -27,16 +27,16 @@ from ..data.fs_utils import git_root
 #     state = torch.load(model_path)
 #     model.load_state_dict(state)
 
-def save_model(model, model_name):
+def save_model(trainer, model_name):
     today = datetime.now().strftime('%Y-%m-%d')
     date_dir = f"{git_root()}/models/{today}"
 
     if not os.path.exists(date_dir):
         os.mkdir(date_dir)
 
-    model.save(f"{date_dir}/{model_name}")
+    trainer.save(f"{date_dir}/{model_name}")
 
 
-def load_model(path):
-    full_path = f"{git_root()}/models/{path}"
-    return keras.models.load_model(full_path)
+def load_model(trainer, checkpoint_path):
+    full_path = f"{git_root()}/models/{checkpoint_path}"
+    return trainer.restore(full_path)
