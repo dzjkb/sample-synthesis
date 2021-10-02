@@ -7,3 +7,5 @@ DATA_ROOT = join(git_root(), 'data')
 RAW = join(DATA_ROOT, 'raw')
 INTERIM = join(DATA_ROOT, 'interim')
 PROCESSED = join(DATA_ROOT, 'processed')
+
+GENERATED = join(git_root(), 'generated')

@@ -28,15 +28,16 @@ from ..data.fs_utils import git_root
 #     model.load_state_dict(state)
 
 def save_model(trainer, model_name):
-    today = datetime.now().strftime('%Y-%m-%d')
-    date_dir = f"{git_root()}/models/{today}"
+    # today = datetime.now().strftime('%Y-%m-%d')
+    # date_dir = f"{git_root()}/models/{today}"
 
-    if not os.path.exists(date_dir):
-        os.mkdir(date_dir)
+    # if not os.path.exists(date_dir):
+    #     os.mkdir(date_dir)
 
+    date_dir = f"{git_root()}/models"
     trainer.save(f"{date_dir}/{model_name}")
 
 
 def load_model(trainer, checkpoint_path):
     full_path = f"{git_root()}/models/{checkpoint_path}"
-    return trainer.restore(full_path)
+    trainer.restore(full_path)
