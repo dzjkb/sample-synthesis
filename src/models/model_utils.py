@@ -11,7 +11,7 @@ def save_model(trainer, model_name):
     date_dir = f"{git_root()}/models/{today}"
 
     if not os.path.exists(date_dir):
-        os.mkdir(date_dir)
+        os.makedirs(date_dir, exist_ok=True)
 
     trainer.save(f"{date_dir}/{model_name}")
 

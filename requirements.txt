@@ -7,5 +7,5 @@ jupyterlab
 librosa
 sklearn
 tqdm
-six
+six==1.15
 gpustat
