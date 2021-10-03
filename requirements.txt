@@ -1,10 +1,11 @@
+typing-extensions==3.7.4.3
 numpy==1.19.5
+tensorflow==2.6.0
+ddsp==1.6.5
 pandas
 jupyterlab
 librosa
 sklearn
 tqdm
 six
-tensorflow
-ddsp
 gpustat
