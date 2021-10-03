@@ -1,4 +1,4 @@
-numpy
+numpy==1.19.5
 pandas
 jupyterlab
 librosa
@@ -7,3 +7,4 @@ tqdm
 six
 tensorflow
 ddsp
+gpustat
