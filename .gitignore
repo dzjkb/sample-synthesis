@@ -6,6 +6,8 @@ models/
 *.sublime-workspace
 conf/
 logs/
+*.ipynb
+generated/
 
 # === Automatically generated ===
 # Byte-compiled / optimized / DLL files

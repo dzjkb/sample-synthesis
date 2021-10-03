@@ -4,7 +4,10 @@ from ddsp.training import (
     # encoders,
     models,
     preprocessing,
+    trainers,
 )
+
+from .model_utils import load_model, strat
 
 
 def get_model(time_steps, sample_rate, n_samples):
@@ -52,3 +55,17 @@ def get_model(time_steps, sample_rate, n_samples):
         processor_group=processor_group,
         losses=[spectral_loss],
     )
+
+
+def get_trainer(time_steps, sample_rate, n_samples, strategy=None, restore_checkpoint=None, **trainer_kwargs):
+    if not strategy:
+        strategy = strat()
+
+    with strategy.scope():
+        model = get_model(time_steps, sample_rate, n_samples)
+        trainer = trainers.Trainer(model, strategy, **trainer_kwargs)
+
+        if restore_checkpoint:
+            load_model(trainer, restore_checkpoint)
+
+    return trainer

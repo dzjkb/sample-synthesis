@@ -2,21 +2,34 @@ import yaml
 import argparse
 from os.path import join
 
-from ddsp.training import (
-    trainers,
-    train_util,
-    eval_util,
-    evaluators,
-    data,
-)
+from ..models.ddsp_models import get_trainer
+from ..models.model_utils import strat
+from ..data.dataset import get_provider
+from ..data.paths import GENERATED
+from .utils import save_wav
 
-from ..models.ddsp_models import get_model
-from ..models.model_utils import load_model
-from ..data.paths import PROCESSED, GENERATED
+
+def sample(model, data_provider, sample_rate, checkpoint, n_gen=10):
+    random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
+    batch = next(iter(random_batch_ds))
+
+    with strat().scope():
+        outputs = model(batch, training=False)
+
+        audio = batch['audio'].numpy()
+        audio_gen = model.get_audio_from_outputs(outputs).numpy()
+
+    print(audio)
+    print(audio_gen)
+
+    for i in range(n_gen):
+        save_wav(join(GENERATED, checkpoint, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)
+        save_wav(join(GENERATED, checkpoint, f'{i}_gen_sample.wav'), audio_gen[i], sr=sample_rate)
 
 
 def main(
     run_name: str,
+    eval_checkpoint: str,
     dataset: str,
     # architecture: str,
     example_secs: int,
@@ -24,28 +37,25 @@ def main(
     frame_rate: int,
     **kwargs,
 ):
-    data_provider = data.TFRecordProvider(
-        join(PROCESSED, dataset) + "*",
-        example_secs=example_secs,
-        sample_rate=sample_rate,
-        frame_rate=frame_rate,
+    data_provider = get_provider(
+        dataset,
+        example_secs,
+        sample_rate,
+        frame_rate,
     )
 
-    strategy = train_util.get_strategy()
-    with strategy.scope():
-        model = get_model(
-            time_steps=frame_rate * example_secs,
-            sample_rate=sample_rate,
-            n_samples=sample_rate * example_secs,
-        )
-        trainer = trainers.Trainer(model, strategy)
+    trainer = get_trainer(
+        time_steps=frame_rate * example_secs,
+        sample_rate=sample_rate,
+        n_samples=sample_rate * example_secs,
+        restore_checkpoint=eval_checkpoint,
+    )
 
-    load_model(trainer, run_name)
-    eval_util.sample(
-        data_provider=data_provider,
-        model=trainer.model,
-        evaluator_classes=[evaluators.BasicEvaluator],
-        save_dir=join(GENERATED, run_name)
+    sample(
+        trainer.model,
+        data_provider,
+        sample_rate=sample_rate,
+        checkpoint=eval_checkpoint,
     )
 
 

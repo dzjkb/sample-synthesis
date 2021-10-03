@@ -12,8 +12,9 @@ from ddsp.training import (
 
 from .logger import get_logger
 from .model_utils import save_model
-from .ddsp_models import get_model
+from .ddsp_models import get_trainer
 from ..data.paths import PROCESSED
+from ..data.dataset import get_provider
 
 logger = get_logger(__name__, 'DEBUG')
 
@@ -26,6 +27,7 @@ def main(
     example_secs: int = 2,
     sample_rate: int = 16000,
     frame_rate: int = 250,
+    **kwargs,
 ):
     # ====== logging
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
@@ -45,24 +47,30 @@ def main(
     logger.debug(f"{frame_rate=}")
 
     # ====== training
-    strategy = train_util.get_strategy()  # default tf.distribute.MirroredStrategy()
-    data_provider = data.TFRecordProvider(
-        join(PROCESSED, dataset) + "*",
-        example_secs=example_secs,
-        sample_rate=sample_rate,
-        frame_rate=frame_rate,
-    )
+    # data_provider = data.TFRecordProvider(
+    #     join(PROCESSED, dataset) + "*",
+    #     example_secs=example_secs,
+    #     sample_rate=sample_rate,
+    #     frame_rate=frame_rate,
+    # )
+    data_provider = get_provider(dataset, example_secs, sample_rate, frame_rate)
     dataset = data_provider.get_dataset(shuffle=False)
     # TODO: ds stats?
     first_example = next(iter(dataset))
 
-    with strategy.scope():
-        model = get_model(
-            time_steps=frame_rate * example_secs,
-            sample_rate=sample_rate,
-            n_samples=sample_rate * example_secs,
-        )
-        trainer = trainers.Trainer(model, strategy, learning_rate=lr)
+    # with strategy.scope():
+    #     model = get_model(
+    #         time_steps=frame_rate * example_secs,
+    #         sample_rate=sample_rate,
+    #         n_samples=sample_rate * example_secs,
+    #     )
+    #     trainer = trainers.Trainer(model, strategy, learning_rate=lr)
+    trainer = get_trainer(
+        time_steps=frame_rate * example_secs,
+        sample_rate=sample_rate,
+        n_samples=sample_rate * example_secs,
+        learning_rate=lr,
+    )
 
     trainer.build(first_example)
     dataset_iter = iter(dataset)

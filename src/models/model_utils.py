@@ -3,6 +3,7 @@ import os
 
 # import torch
 from tensorflow import keras
+from ddsp.training import train_util
 
 from ..data.fs_utils import git_root
 
@@ -28,16 +29,26 @@ from ..data.fs_utils import git_root
 #     model.load_state_dict(state)
 
 def save_model(trainer, model_name):
-    # today = datetime.now().strftime('%Y-%m-%d')
-    # date_dir = f"{git_root()}/models/{today}"
+    today = datetime.now().strftime('%Y-%m-%d')
+    date_dir = f"{git_root()}/models/{today}"
 
-    # if not os.path.exists(date_dir):
-    #     os.mkdir(date_dir)
+    if not os.path.exists(date_dir):
+        os.mkdir(date_dir)
 
-    date_dir = f"{git_root()}/models"
     trainer.save(f"{date_dir}/{model_name}")
 
 
 def load_model(trainer, checkpoint_path):
     full_path = f"{git_root()}/models/{checkpoint_path}"
     trainer.restore(full_path)
+
+
+STRAT = None
+
+def strat():
+    global STRAT
+    if STRAT:
+        return STRAT
+    else:
+        STRAT = train_util.get_strategy()
+        return STRAT
