@@ -19,9 +19,6 @@ def sample(model, data_provider, sample_rate, checkpoint, n_gen=10):
         audio = batch['audio'].numpy()
         audio_gen = model.get_audio_from_outputs(outputs).numpy()
 
-    print(audio)
-    print(audio_gen)
-
     for i in range(n_gen):
         save_wav(join(GENERATED, checkpoint, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)
         save_wav(join(GENERATED, checkpoint, f'{i}_gen_sample.wav'), audio_gen[i], sr=sample_rate)

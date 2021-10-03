@@ -15,6 +15,6 @@ def save_wav(run_name, filename, data, sampling_rate):
     wav_path = f'{out_dir}/{filename}.wav'
 
     if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
+        os.makedirs(out_dir)
 
     soundfile.write(wav_path, data, sampling_rate)
