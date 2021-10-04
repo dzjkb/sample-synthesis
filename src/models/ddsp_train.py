@@ -18,6 +18,7 @@ def main(
     example_secs: int = 2,
     sample_rate: int = 16000,
     frame_rate: int = 250,
+    batch_size: int = 32,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
@@ -37,7 +38,7 @@ def main(
     logger.debug(f"{frame_rate=}")
 
     data_provider = get_provider(dataset, example_secs, sample_rate, frame_rate)
-    dataset = data_provider.get_dataset(shuffle=False)
+    dataset = data_provider.get_batch(batch_size, shuffle=True)
     # TODO: ds stats?
     first_example = next(iter(dataset))
 
