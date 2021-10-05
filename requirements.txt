@@ -1,7 +1,8 @@
 typing-extensions==3.7.4.3
 numpy==1.19.5
-tensorflow==2.6.0
-ddsp==1.6.5
+tensorflow==2.4.0
+tensorflow-probability==0.12.2
+ddsp==1.4.0
 pandas
 jupyterlab
 librosa
