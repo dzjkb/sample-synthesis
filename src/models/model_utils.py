@@ -6,14 +6,14 @@ from ddsp.training import train_util
 from ..data.fs_utils import git_root
 
 
-def save_model(trainer, model_name):
+def get_save_dir(run_name):
     today = datetime.now().strftime('%Y-%m-%d')
     date_dir = f"{git_root()}/models/{today}"
 
     if not os.path.exists(date_dir):
         os.makedirs(date_dir, exist_ok=True)
 
-    trainer.save(f"{date_dir}/{model_name}")
+    return f"{date_dir}/{run_name}"
 
 
 def load_model(trainer, checkpoint_path):

@@ -2,10 +2,13 @@ import datetime as dt
 import argparse
 import yaml
 
+import tensorflow as tf
+
 from .logger import get_logger
-from .model_utils import save_model
+from .model_utils import get_save_dir
 from .ddsp_models import get_trainer
 from ..data.dataset import get_provider
+from ..evaluation.ddsp_eval import sample
 
 logger = get_logger(__name__, 'DEBUG')
 
@@ -19,6 +22,7 @@ def main(
     sample_rate: int = 16000,
     frame_rate: int = 250,
     batch_size: int = 32,
+    steps_per_summary: int = 2000,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
@@ -52,14 +56,29 @@ def main(
     trainer.build(first_example)
     dataset_iter = iter(dataset)
 
-    for i in range(training_steps):
-        losses = trainer.train_step(dataset_iter)
-        res_str = 'step: {}\t'.format(i)
-        for k, v in losses.items():
-            res_str += '{}: {:.2f}\t'.format(k, v)
-        logger.info(res_str)
+    save_dir = get_save_dir(run_name)
+    summary_writer = tf.summary_writer.create_file_writer(f"{save_dir}/summaries")
 
-    save_model(trainer, run_name)
+    with summary_writer.as_default():
+        for i in range(training_steps):
+            losses = trainer.train_step(dataset_iter)
+            res_str = 'step: {}\t'.format(i)
+            for k, v in losses.items():
+                res_str += '{}: {:.2f}\t'.format(k, v)
+                tf.summary.scalar(f"losses/{k}", v, step=i)
+            logger.info(res_str)
+
+            if i % steps_per_summary == 0:
+                trainer.save(save_dir)
+                # sample(
+                #     trainer.model,
+                #     data_provider,
+                #     sample_rate=sample_rate,
+                #     checkpoint=f"{dt.now().strftime('%Y-%m-%d')}/{run_name}",
+                #     n_gen=10,
+                # )
+
+        trainer.save(save_dir)
 
 
 if __name__ == '__main__':
