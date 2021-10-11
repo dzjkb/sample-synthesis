@@ -57,7 +57,7 @@ def main(
     dataset_iter = iter(dataset)
 
     save_dir = get_save_dir(run_name)
-    summary_writer = tf.summary_writer.create_file_writer(f"{save_dir}/summaries")
+    summary_writer = tf.summary.create_file_writer(f"{save_dir}/summaries")
 
     with summary_writer.as_default():
         for i in range(training_steps):

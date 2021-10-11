@@ -1,7 +1,7 @@
 import ddsp
 from ddsp.training import (
     decoders,
-    # encoders,
+    encoders,
     models,
     preprocessing,
     trainers,
@@ -14,11 +14,19 @@ def get_model(time_steps, sample_rate, n_samples):
     # Create Neural Networks.
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
 
+    encoder = encoders.MfccTimeDistributedRnnEncoder(
+        rnn_channels=512,
+        rnn_type='gru',
+        z_dims=32,
+        z_time_steps=time_steps,
+        input_keys = ('audio',),
+    )
+
     decoder = decoders.RnnFcDecoder(rnn_channels = 256,
                                     rnn_type = 'gru',
                                     ch = 256,
                                     layers_per_stack = 1,
-                                    input_keys = ('ld_scaled', 'f0_scaled'),
+                                    input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (('amps', 1),
                                                      ('harmonic_distribution', 45),
                                                      ('noise_magnitudes', 45)))
@@ -50,7 +58,7 @@ def get_model(time_steps, sample_rate, n_samples):
 
     return models.Autoencoder(
         preprocessor=preprocessor,
-        encoder=None,
+        encoder=encoder,
         decoder=decoder,
         processor_group=processor_group,
         losses=[spectral_loss],
