@@ -21,7 +21,7 @@ def main(
         "--input_audio_filepatterns", f"{DATA_ROOT}/interim/{dataset}/*",
         "--output_tfrecord_path", f"{DATA_ROOT}/processed/{dataset}.tfrecord",
         "--sample_rate", f"{sample_rate}",
-        "--coarse_chunk_secs", "0",
+        "--coarse_chunk_secs", "20",
         "--example_secs", f"{example_secs}",
         "--sliding_window_hop_secs", f"{example_secs * 5}",  # supposed to be longer than the sample
         "--frame_rate", f"{frame_rate}",

@@ -79,6 +79,12 @@ class IAF(nn.DictLayer):
         ] for _ in n_flows)[:-1]
 
 
+class IAFPrior(IAF):
+    def call(self, sample_no) -> ['z']:
+        z = tf.zeros((sample_no, 1, self.z_dims * 3))
+        super().call(z)
+
+
 class VAE(Model):
     """
     General class for variational autoencoders
@@ -90,6 +96,7 @@ class VAE(Model):
         preprocessor=None,
         encoder=None,
         posterior=None,
+        prior=None,
         decoder=None,
         processor_group=None,
         losses=None,
@@ -99,6 +106,8 @@ class VAE(Model):
         super().__init__(**kwargs)
         self.preprocessor = preprocessor
         self.encoder = encoder
+        self.posterior = posterior
+        self.prior = prior
         self.decoder = decoder
         self.processor_group = processor_group
         self.loss_objs = ddsp.core.make_iterable(losses)
@@ -124,7 +133,6 @@ class VAE(Model):
     def call(self, features, training=True):
         """Run the core of the network, get predictions and loss."""
         features = self.encode(features, training=training)
-        features.update(self.)
         features.update(self.decoder(features, training=training))
     
         # Run through processor group.
@@ -134,11 +142,21 @@ class VAE(Model):
         outputs = pg_out['controls']
         outputs['audio_synth'] = pg_out['signal']
 
-    if training:
-        self._update_losses_dict(
-            self.loss_objs, features['audio'], outputs['audio_synth'])
+        if training:
+            self._update_losses_dict(
+                self.loss_objs, features['audio'], outputs['audio_synth'])
 
-    return outputs
+        return outputs
+
+    def sample(self, sample_no, f0_hz, loudness_db):
+        features = {
+            "f0_hz": f0_hz,
+            "loudness_db": loudness_db,
+            "sample_no": tf.constant(sample_no),
+        }
+        features.update(self.preprocessor(features, training=False))
+        features.update(self.prior(features))
+        return self.decode(features, training=False)
 
 
 class MultiLayerVAE(Model):
