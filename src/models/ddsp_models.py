@@ -2,7 +2,6 @@ import ddsp
 from ddsp.training import (
     decoders,
     encoders,
-    effects,
     models,
     preprocessing,
     trainers,
