@@ -2,6 +2,7 @@ import ddsp
 from ddsp.training import (
     decoders,
     encoders,
+    effects,
     models,
     preprocessing,
     trainers,
@@ -42,10 +43,13 @@ def get_model(time_steps, sample_rate, n_samples):
                                       name='noise')
     add = ddsp.processors.Add(name='add')
 
+    reverb = ddsp.effects.Reverb(name='reverb', trainable=True)
+
     # Create ProcessorGroup.
     dag = [(harmonic, ['amps', 'harmonic_distribution', 'f0_hz']),
            (noise, ['noise_magnitudes']),
-           (add, ['noise/signal', 'harmonic/signal'])]
+           (add, ['noise/signal', 'harmonic/signal']),
+           (reverb, ['add/signal'])]
 
     processor_group = ddsp.processors.ProcessorGroup(dag=dag,
                                                      name='processor_group')
