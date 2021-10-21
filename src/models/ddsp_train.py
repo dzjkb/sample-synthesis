@@ -1,6 +1,7 @@
 import datetime as dt
 import argparse
 import yaml
+import os.path
 
 import tensorflow as tf
 
@@ -57,7 +58,7 @@ def main(
     dataset_iter = iter(dataset)
 
     save_dir = get_save_dir(run_name)
-    summary_writer = tf.summary.create_file_writer(f"{save_dir}/summaries")
+    summary_writer = tf.summary.create_file_writer(save_dir)
 
     with summary_writer.as_default():
         for i in range(training_steps):
@@ -70,13 +71,14 @@ def main(
 
             if i % steps_per_summary == 0:
                 trainer.save(save_dir)
-                # sample(
-                #     trainer.model,
-                #     data_provider,
-                #     sample_rate=sample_rate,
-                #     checkpoint=f"{dt.now().strftime('%Y-%m-%d')}/{run_name}",
-                #     n_gen=10,
-                # )
+                sample(
+                    trainer.model,
+                    data_provider,
+                    sample_rate=sample_rate,
+                    checkpoint_dir=f"{os.path.basename(save_dir)}/{run_name}",
+                    step=i,
+                    n_gen=10,
+                )
 
         trainer.save(save_dir)
 

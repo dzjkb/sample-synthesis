@@ -55,7 +55,7 @@ class IAF(nn.DictLayer):
         z = tfd.TransformedDistribution(
             distribution=base_distribution(
                 loc=params["loc"],
-                scale_diag=parms["scale"],
+                scale_diag=params["scale"],
             ),
             bijector=tfb.Chain(flow_steps),
         ).sample(bijector_kwargs={"conditional_input": params["h"]})

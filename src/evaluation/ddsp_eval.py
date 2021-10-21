@@ -1,15 +1,17 @@
 import yaml
 import argparse
-from os.path import join
+# from os.path import join
+
+from ddsp.training import summaries
 
 from ..models.ddsp_models import get_trainer
 from ..models.model_utils import strat
 from ..data.dataset import get_provider
-from ..data.paths import GENERATED
-from .utils import save_wav
+# from ..data.paths import GENERATED
+# from .utils import save_wav
 
 
-def sample(model, data_provider, sample_rate, checkpoint, n_gen=10):
+def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
     batch = next(iter(random_batch_ds))
 
@@ -19,9 +21,13 @@ def sample(model, data_provider, sample_rate, checkpoint, n_gen=10):
         audio = batch['audio'].numpy()
         audio_gen = model.get_audio_from_outputs(outputs).numpy()
 
-    for i in range(n_gen):
-        save_wav(join(GENERATED, checkpoint, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)
-        save_wav(join(GENERATED, checkpoint, f'{i}_gen_sample.wav'), audio_gen[i], sr=sample_rate)
+        summaries.audio_summary(audio, step, sample_rate=sample_rate, name="audio original")
+        summaries.audio_summary(audio_gen, step, sample_rate=sample_rate, name="audio generated")
+        summaries.waveform_summary(audio, audio_gen, step, name="waveforms")
+
+    # for i in range(n_gen):
+    #     save_wav(join(GENERATED, checkpoint_dir, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)
+    #     save_wav(join(GENERATED, checkpoint_dir, f'{i}_gen_sample.wav'), audio_gen[i], sr=sample_rate)
 
 
 def main(
