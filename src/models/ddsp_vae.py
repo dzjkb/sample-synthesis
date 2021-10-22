@@ -9,6 +9,8 @@ import ddsp
 from ddsp.training.models.model import Model
 from ddsp.training import nn
 
+from .ddsp_losses import SpectralELBO
+
 
 class IAF(nn.DictLayer):
     """
@@ -144,7 +146,10 @@ class VAE(Model):
 
         if training:
             self._update_losses_dict(
-                self.loss_objs, features['audio'], outputs['audio_synth'])
+                self.loss_objs,
+                features,
+                outputs,
+            )
 
         return outputs
 
@@ -157,6 +162,23 @@ class VAE(Model):
         features.update(self.preprocessor(features, training=False))
         features.update(self.prior(features))
         return self.decode(features, training=False)
+
+    def _update_losses_dict(self, loss_objs, features, outputs):
+        for loss_obj in ddsp.core.make_iterable(loss_objs):
+            # special case for ELBO since it needs more arguments
+            if isinstance(loss_obj, SpectralELBO):
+                losses_dict = loss_obj.get_losses_dict(
+                    features['z'],
+                    features['audio'],
+                    self.get_audio_from_outputs(outputs),
+                )
+                continue
+            if hasattr(loss_obj, 'get_losses_dict'):
+                losses_dict = loss_obj.get_losses_dict(
+                    features['audio'],
+                    self.get_audio_from_outputs(outputs),
+                )
+                self._losses_dict.update(losses_dict)
 
 
 class MultiLayerVAE(Model):
