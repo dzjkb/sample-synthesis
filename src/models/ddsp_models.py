@@ -6,7 +6,7 @@ from ddsp.training import (
     preprocessing,
     trainers,
 )
-import tensorflow.contrib.distributions as tfd
+from tensorflow_probability import distributions as tfd
 
 from .model_utils import load_model, strat
 from .ddsp_vae import VAE, IAF, IAFPrior
@@ -78,12 +78,12 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     # Create Neural Networks.
 
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
-    encoder = encoders.MfccTimeDistributedRnnEncoder(
+    encoder = encoders.MfccRnnEncoder(
         rnn_channels=512,
         rnn_type='gru',
         z_dims=z_dims * 3,
-        z_time_steps=time_steps,
         input_keys = ('audio',),
+        mean_aggregate=True,
     )
     decoder = decoders.RnnFcDecoder(rnn_channels = 256,
                                     rnn_type = 'gru',
@@ -99,6 +99,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
         'z_dims': z_dims,
         'base_distribution': tfd.MultivariateNormalDiag,
         'n_flows': 2,
+        'time_steps': time_steps,
 
     }
     posterior = IAF(**distribution_args)
@@ -135,11 +136,19 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     #     logmag_weight=1.0,
     # )
 
-    elbo_loss = SpectralELBO(posterior, prior)
+    elbo_loss = SpectralELBO(
+        posterior,
+        prior,
+        loss_type='L1',
+        mag_weight=1.0,
+        logmag_weight=1.0,
+    )
 
     return VAE(
         preprocessor=preprocessor,
         encoder=encoder,
+        posterior=posterior,
+        prior=prior,
         decoder=decoder,
         processor_group=processor_group,
         # losses=[spectral_loss],
@@ -147,12 +156,12 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     )
 
 
-def get_trainer(time_steps, sample_rate, n_samples, strategy=None, restore_checkpoint=None, **trainer_kwargs):
+def get_trainer(model_name, time_steps, sample_rate, n_samples, strategy=None, restore_checkpoint=None, **trainer_kwargs):
     if not strategy:
         strategy = strat()
 
     with strategy.scope():
-        model = get_model(time_steps, sample_rate, n_samples)
+        model = get_model(model_name, time_steps, sample_rate, n_samples)
         trainer = trainers.Trainer(model, strategy, **trainer_kwargs)
 
         if restore_checkpoint:

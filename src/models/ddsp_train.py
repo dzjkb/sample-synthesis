@@ -17,6 +17,7 @@ logger = get_logger(__name__, 'DEBUG')
 def main(
     run_name: str,
     dataset: str,
+    model_name: str = 'iaf_vae',
     lr: float = 1e-3,
     training_steps: int = 100,
     example_secs: int = 2,
@@ -48,6 +49,7 @@ def main(
     first_example = next(iter(dataset))
 
     trainer = get_trainer(
+        model_name=model_name,
         time_steps=frame_rate * example_secs,
         sample_rate=sample_rate,
         n_samples=sample_rate * example_secs,
