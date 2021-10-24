@@ -104,6 +104,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     }
     posterior = IAF(**distribution_args)
     prior = IAFPrior(**distribution_args)
+    prior.build((None, None))
 
     # Create Processors.
     harmonic = ddsp.synths.Harmonic(n_samples=n_samples, 

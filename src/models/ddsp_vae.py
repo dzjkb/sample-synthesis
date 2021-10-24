@@ -1,5 +1,4 @@
 from itertools import chain
-import re
 
 import numpy as np
 import tensorflow as tf
