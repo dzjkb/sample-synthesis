@@ -152,7 +152,6 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
         prior=prior,
         decoder=decoder,
         processor_group=processor_group,
-        # losses=[spectral_loss],
         losses=[elbo_loss],
     )
 

@@ -20,8 +20,8 @@ class SpectralELBO(losses.Loss):
         self._prior = prior
 
     def call(self, z, target_audio, audio):
-        # z should be constant, reduce time step dim
-        z = tf.reduce_mean(z, axis=1, keepdims=True)
+        # z should be constant over time, reduce time step dim
+        z = tf.reduce_mean(z, axis=1, keepdims=False)
 
         logq = self._posterior.dist.log_prob(z, bijector_kwargs={f'vae_iaf_maf{i}': {'conditional_input': self._posterior.cond_h} for i in range(self._posterior.n_flows)})
         # the bijector name here doesn't have a 'vae_iaf' prefix since it's built here, outside of the VAE/IAF classes
@@ -29,4 +29,4 @@ class SpectralELBO(losses.Loss):
         kl_term = logq - logp
         spec_term = self._spectral_loss(target_audio, audio)
 
-        return kl_term + spec_term
+        return tf.reduce_mean(kl_term + spec_term)

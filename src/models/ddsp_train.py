@@ -29,6 +29,7 @@ def main(
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
     run_name = f"{run_name}_{run_timestamp}"
+    save_dir = get_save_dir(run_name)
 
     logger.info("")
     logger.info("==============================")
@@ -42,6 +43,12 @@ def main(
     logger.debug(f"{example_secs=}")
     logger.debug(f"{sample_rate=}")
     logger.debug(f"{frame_rate=}")
+
+    tf.debugging.experimental.enable_dump_debug_info(
+        save_dir,
+        tensor_debug_mode="FULL_HEALTH",
+        circular_buffer_size=-1,
+    )
 
     data_provider = get_provider(dataset, example_secs, sample_rate, frame_rate)
     dataset = data_provider.get_batch(batch_size, shuffle=True)
@@ -59,7 +66,6 @@ def main(
     trainer.build(first_example)
     dataset_iter = iter(dataset)
 
-    save_dir = get_save_dir(run_name)
     summary_writer = tf.summary.create_file_writer(save_dir)
 
     with summary_writer.as_default():

@@ -68,18 +68,18 @@ class IAF(nn.DictLayer):
                 self.mades,
             ),
         )
-        self.cond_h = params["h"]
+        self.cond_h = tf.squeeze(params["h"])
 
-        z = self.dist.sample(bijector_kwargs={f'vae_iaf_maf{i}': {'conditional_input': params["h"]} for i in range(self.n_flows)})
+        z = self.dist.sample(bijector_kwargs={f'vae_iaf_maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)})
         # assert len(z.shape) == 3
-        return resample(z, self.time_steps)
+        return resample(z[:, tf.newaxis, :], self.time_steps)
 
     @staticmethod
     def make_flow(params, base_distribution, flow_steps):
         dist = tfd.TransformedDistribution(
             distribution=base_distribution(
-                loc=params["loc"],
-                scale_diag=params["scale"],
+                loc=tf.squeeze(params["loc"]),
+                scale_diag=tf.squeeze(params["scale"]),
             ),
             bijector=tfb.Chain(flow_steps),
         )
@@ -128,12 +128,12 @@ class IAFPrior(IAF):
                 self.mades,
             ),
         )
-        self.cond_h = self.params["h"]
+        self.cond_h = tf.squeeze(self.params["h"])
 
     def call(self, sample_no):
         z = self.dist.sample(sample_no, bijector_kwargs={f'vae_iafprior_maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)})
         assert len(z.shape) == 3
-        return resample(z, self.time_steps)
+        return resample(z[:, tf.newaxis, :], self.time_steps)
 
 
 class VAE(Model):
@@ -220,6 +220,7 @@ class VAE(Model):
                     features['audio'],
                     self.get_audio_from_outputs(outputs),
                 )
+                self._losses_dict.update(losses_dict)
                 continue
             if hasattr(loss_obj, 'get_losses_dict'):
                 losses_dict = loss_obj.get_losses_dict(
