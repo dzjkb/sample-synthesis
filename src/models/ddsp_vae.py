@@ -2,15 +2,17 @@ from itertools import chain
 
 import numpy as np
 import tensorflow as tf
+# import tensorflow_probability as tfp
 from tensorflow_probability import distributions as tfd
 from tensorflow_probability import bijectors as tfb
+# import tensorflow.keras.layers as tfkl
 
 import ddsp
 from ddsp.core import resample
 from ddsp.training.models.model import Model
 from ddsp.training import nn
 
-from .ddsp_losses import SpectralELBO
+from .ddsp_losses import KLRegularizer
 
 
 class IAF(nn.DictLayer):
@@ -26,23 +28,32 @@ class IAF(nn.DictLayer):
         base_distribution,
         n_flows,
         time_steps,
-        flow_hidden_units=[256, 256],
+        flow_hidden_units=[32, 32],
+        name=None,
+        output_keys=('z', 'logq'),
     ):
-        super().__init__(output_keys=['z'])
+        super().__init__(output_keys=list(output_keys), name=name)
         self.base_distribution = base_distribution
         self.z_dims = z_dims
         self.n_flows = n_flows
         self.time_steps = time_steps
         self.flow_hidden_units = flow_hidden_units
-        self.dist = None
-        self.cond_h = None
+
         self.mades = [tfb.AutoregressiveNetwork(
             params=2,
             hidden_units=flow_hidden_units,
             event_shape=(z_dims,),
             conditional=True,
             conditional_event_shape=(z_dims,),
-        ) for _ in range(n_flows)]
+        ) for i in range(n_flows)]
+        self.flow_steps = self.get_bijector(
+            self.z_dims,
+            self.n_flows,
+            self.flow_hidden_units,
+            self.mades
+        )
+        self.cond_h = None
+        self.dist = None
 
     def call(self, z):
         """
@@ -60,40 +71,37 @@ class IAF(nn.DictLayer):
 
         self.dist = self.make_flow(
             params,
+            self.z_dims,
             self.base_distribution,
-            self.get_flow_steps(
-                self.z_dims,
-                self.n_flows,
-                self.flow_hidden_units,
-                self.mades,
-            ),
+            self.flow_steps,
         )
-        self.cond_h = tf.squeeze(params["h"])
 
-        z = self.dist.sample(bijector_kwargs={f'vae_iaf_maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)})
-        # assert len(z.shape) == 3
-        return resample(z[:, tf.newaxis, :], self.time_steps)
+        self.cond_h = tf.squeeze(params["h"])
+        bij_kwargs = {f'maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)}
+        z = self.dist.sample(bijector_kwargs=bij_kwargs)
+        logq = self.dist.log_prob(z, bijector_kwargs=bij_kwargs)
+
+        return resample(z[:, tf.newaxis, :], self.time_steps), logq
 
     @staticmethod
-    def make_flow(params, base_distribution, flow_steps):
+    def make_flow(params, z_dims, base_distribution, flow_steps):
         dist = tfd.TransformedDistribution(
             distribution=base_distribution(
                 loc=tf.squeeze(params["loc"]),
                 scale_diag=tf.squeeze(params["scale"]),
             ),
-            bijector=tfb.Chain(flow_steps),
+            bijector=flow_steps,
         )
-
         return dist
 
     @staticmethod
-    def get_flow_steps(z_dims, n_flows, flow_hidden_units, mades):
-        return list(chain.from_iterable([
+    def get_bijector(z_dims, n_flows, flow_hidden_units, mades):
+        return tfb.Chain(list(chain.from_iterable([
             tfb.Invert(tfb.MaskedAutoregressiveFlow(
                 shift_and_log_scale_fn=mades[i],
-            ), name=f'maf{i}'),
+            ), name=f"maf{i}"),
             tfb.Permute(np.random.permutation(z_dims))
-        ] for i in range(n_flows)))[:-1]
+        ] for i in range(n_flows)))[:-1])
 
 
 class IAFPrior(IAF):
@@ -103,7 +111,7 @@ class IAFPrior(IAF):
         base_distribution,
         n_flows,
         time_steps,
-        flow_hidden_units=[256, 256],
+        flow_hidden_units=[32, 32],
     ):
         super().__init__(
             z_dims,
@@ -111,29 +119,31 @@ class IAFPrior(IAF):
             n_flows,
             time_steps,
             flow_hidden_units=flow_hidden_units,
+            output_keys=('z', 'logp'),
         )
-        self._init_z = tf.zeros((1, 1, self.z_dims * 3))
-        self.params = nn.split_to_dict(self._init_z, (
-            ("scale", self.z_dims),
-            ("loc", self.z_dims),
-            ("h", self.z_dims),
-        ))
+        self.params = {
+            "scale": tf.ones((1, 1, self.z_dims)),
+            "loc": tf.zeros((1, 1, self.z_dims)),
+            "h": tf.zeros((1, 1, self.z_dims)),
+        }
         self.dist = self.make_flow(
             self.params,
+            self.z_dims,
             self.base_distribution,
-            self.get_flow_steps(
-                self.z_dims,
-                self.n_flows,
-                self.flow_hidden_units,
-                self.mades,
-            ),
+            self.flow_steps,
         )
         self.cond_h = tf.squeeze(self.params["h"])
 
-    def call(self, sample_no):
-        z = self.dist.sample(sample_no, bijector_kwargs={f'vae_iafprior_maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)})
-        assert len(z.shape) == 3
+    def sample(self, sample_no):
+        bij_kwargs = {f'maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)}
+        z = self.dist.sample(sample_no, bijector_kwargs=bij_kwargs)
         return resample(z[:, tf.newaxis, :], self.time_steps)
+
+    def call(self, z):
+        # reduce the time step - z should be constant over it anyway
+        z_2d = tf.reduce_mean(z, axis=1, keepdims=True)
+        bij_kwargs = {f'maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)}
+        return z, self.dist.log_prob(z_2d, bijector_kwargs=bij_kwargs)
 
 
 class VAE(Model):
@@ -169,6 +179,8 @@ class VAE(Model):
             features.update(self.encoder(features))
         if self.posterior is not None:
             features.update(self.posterior(features))
+        if self.prior is not None:
+            features.update(self.prior(features))
         return features
 
     def decode(self, features, training=True):
@@ -201,24 +213,23 @@ class VAE(Model):
 
         return outputs
 
-    def sample(self, sample_no, f0_hz, loudness_db):
-        features = {
-            "f0_hz": f0_hz,
-            "loudness_db": loudness_db,
-            "sample_no": tf.constant(sample_no),
-        }
-        features.update(self.preprocessor(features, training=False))
-        features.update(self.prior(features))
-        return self.decode(features, training=False)
+    # def sample(self, sample_no, f0_hz, loudness_db):
+    #     features = {
+    #         "f0_hz": f0_hz,
+    #         "loudness_db": loudness_db,
+    #         "sample_no": tf.constant(sample_no),
+    #     }
+    #     features.update(self.preprocessor(features, training=False))
+    #     features.update(self.prior(features))
+    #     return self.decode(features, training=False)
 
     def _update_losses_dict(self, loss_objs, features, outputs):
         for loss_obj in ddsp.core.make_iterable(loss_objs):
-            # special case for ELBO since it needs more arguments
-            if isinstance(loss_obj, SpectralELBO):
+            # special case for the KL term
+            if isinstance(loss_obj, KLRegularizer):
                 losses_dict = loss_obj.get_losses_dict(
-                    features['z'],
-                    features['audio'],
-                    self.get_audio_from_outputs(outputs),
+                    features['logq'],
+                    features['logp'],
                 )
                 self._losses_dict.update(losses_dict)
                 continue

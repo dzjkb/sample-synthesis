@@ -49,6 +49,9 @@ def main(
         tensor_debug_mode="FULL_HEALTH",
         circular_buffer_size=-1,
     )
+    tf.summary.trace_on(
+        graph=True, profiler=False
+    )
 
     data_provider = get_provider(dataset, example_secs, sample_rate, frame_rate)
     dataset = data_provider.get_batch(batch_size, shuffle=True)
@@ -69,6 +72,7 @@ def main(
     summary_writer = tf.summary.create_file_writer(save_dir)
 
     with summary_writer.as_default():
+        tf.summary.trace_export("graph_summary", step=0)
         for i in range(training_steps):
             losses = trainer.train_step(dataset_iter)
             res_str = 'step: {}\t'.format(i)

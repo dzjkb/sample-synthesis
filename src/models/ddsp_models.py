@@ -10,7 +10,7 @@ from tensorflow_probability import distributions as tfd
 
 from .model_utils import load_model, strat
 from .ddsp_vae import VAE, IAF, IAFPrior
-from .ddsp_losses import SpectralELBO
+from .ddsp_losses import KLRegularizer
 
 
 def get_ddsp_model(time_steps, sample_rate, n_samples):
@@ -104,7 +104,6 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     }
     posterior = IAF(**distribution_args)
     prior = IAFPrior(**distribution_args)
-    prior.build((None, None))
 
     # Create Processors.
     harmonic = ddsp.synths.Harmonic(n_samples=n_samples, 
@@ -131,19 +130,12 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     processor_group = ddsp.processors.ProcessorGroup(dag=dag,
                                                      name='processor_group')
 
-    # spectral_loss = ddsp.losses.SpectralLoss(
-    #     loss_type='L1',
-    #     mag_weight=1.0,
-    #     logmag_weight=1.0,
-    # )
-
-    elbo_loss = SpectralELBO(
-        posterior,
-        prior,
+    spectral_loss = ddsp.losses.SpectralLoss(
         loss_type='L1',
         mag_weight=1.0,
         logmag_weight=1.0,
     )
+    kl_loss = KLRegularizer()
 
     return VAE(
         preprocessor=preprocessor,
@@ -152,7 +144,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
         prior=prior,
         decoder=decoder,
         processor_group=processor_group,
-        losses=[elbo_loss],
+        losses=[spectral_loss, kl_loss],
     )
 
 
