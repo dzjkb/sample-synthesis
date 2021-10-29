@@ -100,7 +100,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
         'base_distribution': tfd.MultivariateNormalDiag,
         'n_flows': 2,
         'time_steps': time_steps,
-        'flow_hidden_units': (64, 64),
+        'flow_hidden_units': [64, 64],
     }
     posterior = IAF(**distribution_args)
     prior = IAFPrior(**distribution_args)

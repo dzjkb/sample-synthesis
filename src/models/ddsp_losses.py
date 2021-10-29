@@ -14,4 +14,4 @@ class KLRegularizer(losses.Loss):
         self.weight = weight
 
     def call(self, logq, logp):
-        return tf.constant(self.weight) * tf.reduce_sum(logq - logp)
+        return tf.constant(self.weight, dtype=tf.float32) * tf.reduce_sum(logq - logp)

@@ -214,15 +214,9 @@ class VAE(Model):
         return outputs
 
     def sample(self, features, latent_key='z'):
-        # features = {
-        #     "f0_hz": f0_hz,
-        #     "loudness_db": loudness_db,
-        #     "sample_no": tf.constant(sample_no),
-        # }
         features.update(self.preprocessor(features, training=False))
         features[latent_key] = self.prior.sample(features['audio'].shape[0])
-        features.update(self.decode(features, training=False))
-        return self.processor_group(features)
+        return self.decode(features, training=False)
 
     def _update_losses_dict(self, loss_objs, features, outputs):
         for loss_obj in ddsp.core.make_iterable(loss_objs):
