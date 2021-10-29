@@ -216,7 +216,12 @@ class VAE(Model):
     def sample(self, features, latent_key='z'):
         features.update(self.preprocessor(features, training=False))
         features[latent_key] = self.prior.sample(features['audio'].shape[0])
-        return self.decode(features, training=False)
+        features.update(self.decoder(features, training=False))
+
+        pg_out = self.processor_group(features, return_outputs_dict=True)
+        outputs = pg_out['controls']
+        outputs['audio_synth'] = pg_out['signal']
+        return outputs
 
     def _update_losses_dict(self, loss_objs, features, outputs):
         for loss_obj in ddsp.core.make_iterable(loss_objs):
