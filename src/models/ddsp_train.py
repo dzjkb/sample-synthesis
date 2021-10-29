@@ -81,7 +81,7 @@ def main(
                 tf.summary.scalar(f"losses/{k}", v, step=i)
             logger.info(res_str)
 
-            if i % steps_per_summary == 0:
+            if i != 0 and i % steps_per_summary == 0:
                 trainer.save(save_dir)
                 sample(
                     trainer.model,

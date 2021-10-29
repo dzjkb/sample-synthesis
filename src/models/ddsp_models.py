@@ -100,7 +100,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
         'base_distribution': tfd.MultivariateNormalDiag,
         'n_flows': 2,
         'time_steps': time_steps,
-
+        'flow_hidden_units': (64, 64),
     }
     posterior = IAF(**distribution_args)
     prior = IAFPrior(**distribution_args)
@@ -115,17 +115,19 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
                                       initial_bias=-10.0,
                                       name='noise')
     add = ddsp.processors.Add(name='add')
-    reverb = ddsp.effects.Reverb(
-        name='reverb',
-        trainable=True,
-        reverb_length=24000,
-    )
+    # reverb = ddsp.effects.Reverb(
+    #     name='reverb',
+    #     trainable=True,
+    #     reverb_length=24000,
+    # )
 
     # Create ProcessorGroup.
-    dag = [(harmonic, ['amps', 'harmonic_distribution', 'f0_hz']),
-           (noise, ['noise_magnitudes']),
-           (add, ['noise/signal', 'harmonic/signal']),
-           (reverb, ['add/signal'])]
+    dag = [
+        (harmonic, ['amps', 'harmonic_distribution', 'f0_hz']),
+        (noise, ['noise_magnitudes']),
+        (add, ['noise/signal', 'harmonic/signal']),
+        # (reverb, ['add/signal']),
+    ]
 
     processor_group = ddsp.processors.ProcessorGroup(dag=dag,
                                                      name='processor_group')
