@@ -25,6 +25,7 @@ def main(
     frame_rate: int = 250,
     batch_size: int = 32,
     steps_per_summary: int = 2000,
+    kl_weight: int = 1,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
@@ -44,11 +45,11 @@ def main(
     logger.debug(f"{sample_rate=}")
     logger.debug(f"{frame_rate=}")
 
-    tf.debugging.experimental.enable_dump_debug_info(
-        save_dir,
-        tensor_debug_mode="FULL_HEALTH",
-        circular_buffer_size=-1,
-    )
+    # tf.debugging.experimental.enable_dump_debug_info(
+    #     save_dir,
+    #     tensor_debug_mode="FULL_HEALTH",
+    #     circular_buffer_size=-1,
+    # )
     tf.summary.trace_on(
         graph=True, profiler=False
     )
@@ -64,6 +65,7 @@ def main(
         sample_rate=sample_rate,
         n_samples=sample_rate * example_secs,
         learning_rate=lr,
+        kl_weight=kl_weight,
     )
 
     trainer.build(first_example)

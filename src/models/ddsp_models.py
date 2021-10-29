@@ -13,7 +13,7 @@ from .ddsp_vae import VAE, IAF, IAFPrior
 from .ddsp_losses import KLRegularizer
 
 
-def get_ddsp_model(time_steps, sample_rate, n_samples):
+def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None):
     # Create Neural Networks.
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
 
@@ -71,7 +71,7 @@ def get_ddsp_model(time_steps, sample_rate, n_samples):
     )
 
 
-def get_iaf_vae(time_steps, sample_rate, n_samples):
+def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
     # parameters
     z_dims = 32
 
@@ -137,7 +137,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
         mag_weight=1.0,
         logmag_weight=1.0,
     )
-    kl_loss = KLRegularizer()
+    kl_loss = KLRegularizer(weight=kl_weight)
 
     return VAE(
         preprocessor=preprocessor,
@@ -150,12 +150,12 @@ def get_iaf_vae(time_steps, sample_rate, n_samples):
     )
 
 
-def get_trainer(model_name, time_steps, sample_rate, n_samples, strategy=None, restore_checkpoint=None, **trainer_kwargs):
+def get_trainer(model_name, time_steps, sample_rate, n_samples, kl_weight, strategy=None, restore_checkpoint=None, **trainer_kwargs):
     if not strategy:
         strategy = strat()
 
     with strategy.scope():
-        model = get_model(model_name, time_steps, sample_rate, n_samples)
+        model = get_model(model_name, time_steps, sample_rate, n_samples, kl_weight=kl_weight)
         trainer = trainers.Trainer(model, strategy, **trainer_kwargs)
 
         if restore_checkpoint:
@@ -164,8 +164,8 @@ def get_trainer(model_name, time_steps, sample_rate, n_samples, strategy=None, r
     return trainer
 
 
-def get_model(model_name, time_steps, sample_rate, n_samples):
+def get_model(model_name, time_steps, sample_rate, n_samples, kl_weight):
     return {
         'ddsp_autoenc': get_ddsp_model,
         'iaf_vae': get_iaf_vae,
-    }[model_name](time_steps, sample_rate, n_samples)
+    }[model_name](time_steps, sample_rate, n_samples, kl_weight)
