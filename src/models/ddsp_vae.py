@@ -119,7 +119,7 @@ class IAFPrior(IAF):
             n_flows,
             time_steps,
             flow_hidden_units=flow_hidden_units,
-            output_keys=('z', 'logp'),
+            output_keys=('logp',),
         )
         self.params = {
             "scale": tf.ones((1, 1, self.z_dims)),
@@ -143,7 +143,7 @@ class IAFPrior(IAF):
         # reduce the time step - z should be constant over it anyway
         z_2d = tf.reduce_mean(z, axis=1, keepdims=True)
         bij_kwargs = {f'maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)}
-        return z, self.dist.log_prob(z_2d, bijector_kwargs=bij_kwargs)
+        return self.dist.log_prob(z_2d, bijector_kwargs=bij_kwargs)
 
 
 class VAE(Model):
