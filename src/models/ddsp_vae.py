@@ -15,6 +15,72 @@ from ddsp.training import nn
 from .ddsp_losses import KLRegularizer
 
 
+class GaussPosterior(nn.DictLayer):
+    def __init__(
+        self,
+        z_dims,
+        time_steps,
+        name=None,
+        output_keys=('z', 'logq'),
+    ):
+        super().__init__(output_keys=list(output_keys), name=name)
+        self.z_dims = z_dims
+        self.time_steps = time_steps
+        self.dist = None
+
+    def call(self, z):
+        # reduce the time step - z should be constant over it anyway
+        z = tf.reduce_mean(z, axis=1, keepdims=False)
+
+        params = nn.split_to_dict(z, (
+            ("scale", self.z_dims),
+            ("loc", self.z_dims),
+        ))
+
+        self.dist = tfd.MultivariateNormalDiag(
+            loc=params["loc"],
+            scale_diag=params["scale"],
+        )
+
+        z = self.dist.sample()
+        logq = self.dist.log_prob(z)
+
+        return resample(z[:, tf.newaxis, :], self.time_steps), logq
+
+
+class GaussPrior(GaussPosterior):
+    def __init__(
+        self,
+        z_dims,
+        time_steps,
+        name=None,
+        output_keys=('logp',),
+    ):
+        super().__init__(
+            z_dims=z_dims,
+            time_steps=time_steps,
+            name=name,
+            output_keys=list(output_keys),
+        )
+        self.params = {
+            "scale": tf.ones((self.z_dims,)),
+            "loc": tf.zeros((self.z_dims,)),
+        }
+        self.dist = tfd.MultivariateNormalDiag(
+            loc=self.params["loc"],
+            scale_diag=self.params["scale"],
+        )
+
+    def call(self, z):
+        # reduce the time step - z should be constant over it anyway
+        z_2d = tf.reduce_mean(z, axis=1, keepdims=False)
+        return self.dist.log_prob(z_2d)
+
+    def sample(self, sample_no):
+        z = self.dist.sample(sample_no)
+        return resample(z[:, tf.newaxis, :], self.time_steps)
+
+
 class IAF(nn.DictLayer):
     """
     A class implementing multiple IAF steps on top of a given base distribution
@@ -61,7 +127,7 @@ class IAF(nn.DictLayer):
         """
 
         # reduce the time step - z should be constant over it anyway
-        z = tf.reduce_mean(z, axis=1, keepdims=True)
+        z = tf.reduce_mean(z, axis=1, keepdims=False)
 
         params = nn.split_to_dict(z, (
             ("scale", self.z_dims),
@@ -122,9 +188,9 @@ class IAFPrior(IAF):
             output_keys=('logp',),
         )
         self.params = {
-            "scale": tf.ones((1, 1, self.z_dims)),
-            "loc": tf.zeros((1, 1, self.z_dims)),
-            "h": tf.zeros((1, 1, self.z_dims)),
+            "scale": tf.ones((self.z_dims,)),
+            "loc": tf.zeros((self.z_dims,)),
+            "h": tf.zeros((self.z_dims,)),
         }
         self.dist = self.make_flow(
             self.params,
@@ -141,7 +207,7 @@ class IAFPrior(IAF):
 
     def call(self, z):
         # reduce the time step - z should be constant over it anyway
-        z_2d = tf.reduce_mean(z, axis=1, keepdims=True)
+        z_2d = tf.reduce_mean(z, axis=1, keepdims=False)
         bij_kwargs = {f'maf{i}': {'conditional_input': self.cond_h} for i in range(self.n_flows)}
         return self.dist.log_prob(z_2d, bijector_kwargs=bij_kwargs)
 
