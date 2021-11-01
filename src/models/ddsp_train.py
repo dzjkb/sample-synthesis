@@ -75,23 +75,23 @@ def main(
     summary_writer = tf.summary.create_file_writer(save_dir)
 
     with summary_writer.as_default():
-        tf.summary.trace_export("graph_summary", step=0)
+        tf.summary.trace_export("graph_summary", step=1)
         for i in range(training_steps):
             losses = trainer.train_step(dataset_iter)
-            res_str = 'step: {}\t'.format(i)
+            res_str = 'step: {}\t'.format(i + 1)
             for k, v in losses.items():
                 res_str += '{}: {:.2f}\t'.format(k, v)
-                tf.summary.scalar(f"losses/{k}", v, step=i)
+                tf.summary.scalar(f"losses/{k}", v, step=i + 1)
             logger.info(res_str)
 
-            if i != 0 and i % steps_per_summary == 0:
+            if i != 0 and (i+1) % steps_per_summary == 0:
                 trainer.save(save_dir)
                 sample(
                     trainer.model,
                     data_provider,
                     sample_rate=sample_rate,
                     checkpoint_dir=f"{os.path.basename(save_dir)}/{run_name}",
-                    step=i,
+                    step=i + 1,
                     n_gen=10,
                     synth_params=synth_params_summary,
                 )

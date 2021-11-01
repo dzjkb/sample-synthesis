@@ -97,6 +97,12 @@ def sp_summary(outputs, step):
         summaries.fig_summary(f'noise_mags/noise_mags_{i + 1}', fig, step)
 
 
+def synth_audio_summary(outputs, step, sample_rate, synths=("harmonic", "noise")):
+    for key in synths:
+        audio = outputs[key]["signal"]
+        summaries.audio_summary(audio, step, sample_rate=sample_rate, name=f"{key} synth - audio")
+
+
 def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, synth_params=False):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
     batch = next(iter(random_batch_ds))
@@ -112,6 +118,7 @@ def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, sy
         summaries.waveform_summary(audio, audio_gen, step, name="waveforms")
         if synth_params:
             sp_summary(outputs, step)
+            synth_audio_summary(outputs)
 
         if hasattr(model, "sample"):
             sampled = model.sample(batch)
@@ -119,6 +126,7 @@ def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, sy
             summaries.audio_summary(sampled_gen, step, sample_rate=sample_rate, name="audio sampled")
             if synth_params:
                 sp_summary(sampled, step)
+                synth_audio_summary(sampled)
 
     # for i in range(n_gen):
     #     save_wav(join(GENERATED, checkpoint_dir, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)
