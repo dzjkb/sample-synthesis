@@ -25,6 +25,7 @@ def main(
     frame_rate: int = 250,
     batch_size: int = 32,
     steps_per_summary: int = 2000,
+    synth_params_summary: bool = False,
     kl_weight: int = 1,
     **kwargs,
 ):
@@ -92,6 +93,7 @@ def main(
                     checkpoint_dir=f"{os.path.basename(save_dir)}/{run_name}",
                     step=i,
                     n_gen=10,
+                    synth_params=synth_params_summary,
                 )
 
         trainer.save(save_dir)
