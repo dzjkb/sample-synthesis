@@ -173,14 +173,14 @@ class VAE(Model):
         self.loss_objs = ddsp.core.make_iterable(losses)
 
     def encode(self, features, training=True):
-        if self.preprocessor is not None:
-            features.update(self.preprocessor(features, training=training))
-        if self.encoder is not None:
-            features.update(self.encoder(features))
-        if self.posterior is not None:
-            features.update(self.posterior(features))
-        if self.prior is not None:
-            features.update(self.prior(features))
+        # if self.preprocessor is not None:
+        features.update(self.preprocessor(features, training=training))
+        # if self.encoder is not None:
+        features.update(self.encoder(features))
+        # if self.posterior is not None:
+        features.update(self.posterior(features))
+        # if self.prior is not None:
+        features.update(self.prior(features))
         return features
 
     def decode(self, features, training=True):
@@ -214,11 +214,15 @@ class VAE(Model):
         return outputs
 
     def sample(self, features, latent_key='z'):
-        features.update(self.preprocessor(features, training=False))
-        features[latent_key] = self.prior.sample(features['audio'].shape[0])
-        features.update(self.decoder(features, training=False))
+        needed_features = {}
+        for k in self.preprocessor.all_input_keys + ['audio', 'f0_confidence']:
+            needed_features[k] = features[k]
 
-        pg_out = self.processor_group(features, return_outputs_dict=True)
+        needed_features.update(self.preprocessor(needed_features, training=False))
+        needed_features[latent_key] = self.prior.sample(needed_features['audio'].shape[0])
+        needed_features.update(self.decoder(needed_features, training=False))
+
+        pg_out = self.processor_group(needed_features, return_outputs_dict=True)
         outputs = pg_out['controls']
         outputs['audio_synth'] = pg_out['signal']
         return outputs

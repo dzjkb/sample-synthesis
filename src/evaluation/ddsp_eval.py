@@ -24,10 +24,13 @@ def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10):
         summaries.audio_summary(audio, step, sample_rate=sample_rate, name="audio original")
         summaries.audio_summary(audio_gen, step, sample_rate=sample_rate, name="audio generated")
         summaries.waveform_summary(audio, audio_gen, step, name="waveforms")
+        summaries.midiae_sp_summary(outputs, step)
 
-        sampled = model.sample(batch)
-        sampled_gen = model.get_audio_from_outputs(sampled).numpy()
-        summaries.audio_summary(sampled_gen, step, sample_rate=sample_rate, name="audio sampled")
+        if hasattr(model, "sample"):
+            sampled = model.sample(batch)
+            sampled_gen = model.get_audio_from_outputs(sampled).numpy()
+            summaries.audio_summary(sampled_gen, step, sample_rate=sample_rate, name="audio sampled")
+            summaries.midiae_sp_summary(sampled, step)
 
     # for i in range(n_gen):
     #     save_wav(join(GENERATED, checkpoint_dir, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)

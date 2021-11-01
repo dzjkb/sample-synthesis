@@ -45,13 +45,15 @@ def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None):
                                       name='noise')
     add = ddsp.processors.Add(name='add')
 
-    reverb = ddsp.effects.Reverb(name='reverb', trainable=True)
+    # reverb = ddsp.effects.Reverb(name='reverb', trainable=True)
 
     # Create ProcessorGroup.
-    dag = [(harmonic, ['amps', 'harmonic_distribution', 'f0_hz']),
-           (noise, ['noise_magnitudes']),
-           (add, ['noise/signal', 'harmonic/signal']),
-           (reverb, ['add/signal'])]
+    dag = [
+        (harmonic, ['amps', 'harmonic_distribution', 'f0_hz']),
+        (noise, ['noise_magnitudes']),
+        (add, ['noise/signal', 'harmonic/signal']),
+        # (reverb, ['add/signal']),
+    ]
 
     processor_group = ddsp.processors.ProcessorGroup(dag=dag,
                                                      name='processor_group')
