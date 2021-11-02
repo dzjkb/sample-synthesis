@@ -8,7 +8,7 @@ from ..data.paths import PROCESSED
 _AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def PreprocessedTFRecordProvider(data.TFRecordProvider):
+class PreprocessedTFRecordProvider(data.TFRecordProvider):
     def __init__(
         self,
         file_pattern=None,
