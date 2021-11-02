@@ -22,7 +22,6 @@ class PreprocessedTFRecordProvider(data.TFRecordProvider):
             example_secs,
             sample_rate,
             frame_rate,
-            tf.data.TFRecordDataset,
         )
         self._pre_f = preprocess_f
 
