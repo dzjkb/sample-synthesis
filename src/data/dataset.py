@@ -52,10 +52,11 @@ def get_provider(dataset, example_secs, sample_rate, frame_rate):
 
 
 def get_preprocess_pipeline(ds_name, example_secs, sample_rate, frame_rate):
-    if ds_name == "nsynth":
-        return lambda ex: _nsynth_preprocess_ex(ex, sample_rate, frame_rate)
-    else:
-        return None
+    # if ds_name == "nsynth":
+    #     return lambda ex: _nsynth_preprocess_ex(ex, sample_rate, frame_rate)
+    # else:
+    #     return None
+    return None  # turns out nsynth examples are already preprocessed what???
 
 
 def _nsynth_preprocess_ex(ex, sample_rate, frame_rate, n_fft=2048):
