@@ -58,6 +58,9 @@ def main(
     data_provider = get_provider(dataset, example_secs, sample_rate, frame_rate)
     dataset = data_provider.get_batch(batch_size, shuffle=True)
     # TODO: ds stats?
+    logger.debug("Dataset information:")
+    logger.debug(f"size={dataset.cardinality()}")
+
     first_example = next(iter(dataset))
 
     trainer = get_trainer(
