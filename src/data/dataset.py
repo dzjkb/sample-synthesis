@@ -1,7 +1,10 @@
 from os.path import join
 
 from ddsp.training import data
+from ddsp.core import midi_to_hz
+from ddsp import spectral_ops
 import tensorflow as tf
+import numpy as np
 
 from ..data.paths import PROCESSED
 
@@ -39,27 +42,37 @@ def get_provider(dataset, example_secs, sample_rate, frame_rate):
         example_secs=example_secs,
         sample_rate=sample_rate,
         frame_rate=frame_rate,
-        preprocess_f=get_preprocess_pipeline(dataset),
+        preprocess_f=get_preprocess_pipeline(
+            dataset,
+            example_secs,
+            sample_rate,
+            frame_rate,
+        ),
     )
 
 
-def get_preprocess_pipeline(ds_name):
+def get_preprocess_pipeline(ds_name, example_secs, sample_rate, frame_rate):
     if ds_name == "nsynth":
-        return _nsynth_preprocess_ex
+        return lambda ex: _nsynth_preprocess_ex(ex, sample_rate, frame_rate)
     else:
         return None
 
 
-def _nsynth_preprocess_ex(ex):
+def _nsynth_preprocess_ex(ex, sample_rate, frame_rate, n_fft=2048):
     ex_out = {
         'audio':
             ex['audio'],
         'f0_hz':
-            ex['f0']['hz'],
-        'f0_confidence':
-            ex['f0']['confidence'],
+            midi_to_hz(ex['pitch']),
+        # 'f0_confidence':
+        #     ex['f0']['confidence'],
         'loudness_db':
-            ex['loudness']['db'],
+            spectral_ops.compute_loudness(
+                ex['audio'],
+                sample_rate,
+                frame_rate,
+                n_fft
+            ).astype(np.float32),
     }
     ex_out.update({
         'pitch':
