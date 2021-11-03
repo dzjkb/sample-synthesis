@@ -87,10 +87,11 @@ def _nsynth_preprocess_ex(ex, sample_rate, frame_rate, n_fft=2048):
         #     ex['f0']['confidence'],
         'loudness_db':
             spectral_ops.compute_loudness(
-                ex['audio'].numpy(),
+                ex['audio'],
                 sample_rate,
                 frame_rate,
-                n_fft
+                n_fft,
+                use_tf=True,
             ).astype(np.float32),
     }
     ex_out.update({
