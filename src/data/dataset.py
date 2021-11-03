@@ -92,7 +92,7 @@ def _nsynth_preprocess_ex(ex, sample_rate, frame_rate, n_fft=2048):
                 frame_rate,
                 n_fft,
                 use_tf=True,
-            ).astype(np.float32),
+            ),
     }
     ex_out.update({
         'pitch':
