@@ -98,10 +98,10 @@ def _nsynth_preprocess_ex(ex, sample_rate, frame_rate, n_fft=2048):
         'pitch':
             ex['pitch'],
         'instrument_source':
-            ex['instrument']['source'],
+            ex['instrument_source'],
         'instrument_family':
-            ex['instrument']['family'],
+            ex['instrument_family'],
         'instrument':
-            ex['instrument']['label'],
+            ex['instrument'],
     })
     return ex_out
