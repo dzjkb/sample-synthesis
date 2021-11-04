@@ -4,7 +4,6 @@ from ddsp.training import data
 from ddsp.core import midi_to_hz
 from ddsp import spectral_ops
 import tensorflow as tf
-import numpy as np
 
 from ..data.paths import PROCESSED
 
@@ -21,6 +20,7 @@ class NSynthProvider(data.DataProvider):
         preprocess_f=None,
     ):
         self._file_pattern = file_pattern
+        self._example_secs = example_secs
         self._audio_length = example_secs * sample_rate
         self._feature_length = example_secs * frame_rate
         super().__init__(sample_rate, frame_rate)
@@ -31,7 +31,12 @@ class NSynthProvider(data.DataProvider):
             return tf.io.parse_single_example(record, self.features_dict)
 
         def preprocess_nsynth(ex):
-            return _nsynth_preprocess_ex(ex, self._sample_rate, self._frame_rate)
+            return _nsynth_preprocess_ex(
+                ex,
+                self._example_secs,
+                self._sample_rate,
+                self._frame_rate,
+            )
 
         filenames = tf.data.Dataset.list_files(self._file_pattern, shuffle=shuffle)
         dataset = filenames.interleave(
@@ -77,12 +82,12 @@ def get_provider(dataset, example_secs, sample_rate, frame_rate):
     )
 
 
-def _nsynth_preprocess_ex(ex, sample_rate, frame_rate, n_fft=2048):
+def _nsynth_preprocess_ex(ex, example_secs, sample_rate, frame_rate, n_fft=2048):
     ex_out = {
         'audio':
             ex['audio'],
         'f0_hz':
-            midi_to_hz(ex['pitch']),
+            tf.repeat(midi_to_hz(ex['pitch']), example_secs * frame_rate),
         # 'f0_confidence':
         #     ex['f0']['confidence'],
         'loudness_db':
