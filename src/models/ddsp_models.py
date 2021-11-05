@@ -41,7 +41,7 @@ def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None):
 
     noise = ddsp.synths.FilteredNoise(n_samples=n_samples,
                                       window_size=0,
-                                      initial_bias=-10.0,
+                                      initial_bias=-2.0,
                                       name='noise')
     add = ddsp.processors.Add(name='add')
 
@@ -114,7 +114,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
 
     noise = ddsp.synths.FilteredNoise(n_samples=n_samples,
                                       window_size=0,
-                                      initial_bias=-10.0,
+                                      initial_bias=-2.0,
                                       name='noise')
     add = ddsp.processors.Add(name='add')
     # reverb = ddsp.effects.Reverb(
@@ -190,7 +190,7 @@ def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight):
 
     noise = ddsp.synths.FilteredNoise(n_samples=n_samples,
                                       window_size=0,
-                                      initial_bias=-10.0,
+                                      initial_bias=-2.0,
                                       name='noise')
     add = ddsp.processors.Add(name='add')
     # reverb = ddsp.effects.Reverb(
@@ -251,10 +251,12 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
                                     rnn_type = 'gru',
                                     ch = 256,
                                     layers_per_stack = 1,
-                                    input_keys = ('ld_scaled', 'z'),
+                                    input_keys = ('z'),
+                                    # input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (
                                         # ('amps', 1),
                                         # ('harmonic_distribution', 45),
+                                        # ('f0_harmonic', 45),
                                         ('noise_magnitudes_1', 45),
                                         ('noise_magnitudes_2', 45),
                                     ))
@@ -290,6 +292,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
 
     # Create ProcessorGroup.
     dag = [
+        # (harmonic, ['amps', 'harmonic_distribution', 'f0_harmonic']),
         (noise1, ['noise_magnitudes_1']),
         (noise2, ['noise_magnitudes_2']),
         (add, ['noise1/signal', 'noise2/signal']),
