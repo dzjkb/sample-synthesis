@@ -243,7 +243,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     encoder = encoders.MfccRnnEncoder(
         rnn_channels=512,
         rnn_type='gru',
-        z_dims=z_dims * 2,
+        z_dims=z_dims * 3,#2,  # depends on how many inputs the latent distributions take
         input_keys = ('audio',),
         mean_aggregate=True,
     )
@@ -262,12 +262,21 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
                                     ))
 
     # Create latent distributions
+    # distribution_args = {
+    #     'z_dims': z_dims,
+    #     'time_steps': time_steps,
+    # }
+    # posterior = GaussPosterior(**distribution_args)
+    # prior = GaussPrior(**distribution_args)
     distribution_args = {
         'z_dims': z_dims,
+        'base_distribution': tfd.MultivariateNormalDiag,
+        'n_flows': 2,
         'time_steps': time_steps,
+        'flow_hidden_units': [16, 16],
     }
-    posterior = GaussPosterior(**distribution_args)
-    prior = GaussPrior(**distribution_args)
+    posterior = IAF(**distribution_args)
+    prior = IAFPrior(**distribution_args)
 
     # Create Processors.
     # harmonic = ddsp.synths.Harmonic(n_samples=n_samples,
