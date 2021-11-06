@@ -28,7 +28,7 @@ def main(
     steps_per_summary: int = 2000,
     synth_params_summary: bool = False,
     kl_weight: int = 1,
-    checkpoint_dir: = None,
+    checkpoint_dir: str = None,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
