@@ -16,8 +16,12 @@ def get_save_dir(run_name):
     return f"{date_dir}/{run_name}"
 
 
+def get_full_checkpoint_dir(path):
+    return f"{git_root()}/models/{path}"
+
+
 def load_model(trainer, checkpoint_path):
-    full_path = f"{git_root()}/models/{checkpoint_path}"
+    full_path = get_full_checkpoint_dir(checkpoint_path)
     trainer.restore(full_path)
 
 

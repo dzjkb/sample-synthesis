@@ -5,7 +5,7 @@ import os.path
 
 import tensorflow as tf
 
-from .model_utils import load_model
+from .model_utils import load_model, get_full_checkpoint_dir
 from .logger import get_logger
 from .model_utils import get_save_dir
 from .ddsp_models import get_trainer
@@ -34,7 +34,7 @@ def main(
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
     run_name = f"{run_name}_{run_timestamp}"
 
-    save_dir = checkpoint_dir or get_save_dir(run_name)
+    save_dir = get_full_checkpoint_dir(checkpoint_dir) if checkpoint_dir or get_save_dir(run_name)
 
     logger.info("")
     logger.info("==============================")
