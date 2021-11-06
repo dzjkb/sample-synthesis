@@ -5,6 +5,7 @@ import os.path
 
 import tensorflow as tf
 
+from .model_utils import load_model
 from .logger import get_logger
 from .model_utils import get_save_dir
 from .ddsp_models import get_trainer
@@ -27,15 +28,21 @@ def main(
     steps_per_summary: int = 2000,
     synth_params_summary: bool = False,
     kl_weight: int = 1,
+    checkpoint_dir: = None,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
     run_name = f"{run_name}_{run_timestamp}"
-    save_dir = get_save_dir(run_name)
+
+    save_dir = checkpoint_dir or get_save_dir(run_name)
 
     logger.info("")
     logger.info("==============================")
     logger.info(f"Starting run {run_name}")
+    if checkpoint_dir:
+        logger.info(f"resuming from {checkpoint_dir}")
+        logger.info("warning - model parameters must match the ones used earlier")
+        logger.info("otherwise expect weird tensorflow errors")
     logger.info("==============================")
     logger.info("")
     logger.debug(f"{run_name=}")
@@ -74,6 +81,9 @@ def main(
 
     trainer.build(first_example)
     dataset_iter = iter(dataset)
+
+    if checkpoint_dir:
+        load_model(trainer, checkpoint_dir)
 
     summary_writer = tf.summary.create_file_writer(save_dir)
 

@@ -8,7 +8,7 @@ from ddsp.training import (
 )
 from tensorflow_probability import distributions as tfd
 
-from .model_utils import load_model, strat
+from .model_utils import strat
 from .ddsp_vae import VAE, IAF, IAFPrior, GaussPosterior, GaussPrior
 from .ddsp_losses import KLRegularizer
 
@@ -327,9 +327,6 @@ def get_trainer(model_name, time_steps, sample_rate, n_samples, kl_weight, strat
     with strategy.scope():
         model = get_model(model_name, time_steps, sample_rate, n_samples, kl_weight=kl_weight)
         trainer = trainers.Trainer(model, strategy, **trainer_kwargs)
-
-        if restore_checkpoint:
-            load_model(trainer, restore_checkpoint)
 
     return trainer
 
