@@ -255,10 +255,12 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
                                     # input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (
                                         # ('amps', 1),
+                                        ('sin_amps', 32),
+                                        ('sin_freqs', 32),
                                         # ('harmonic_distribution', 45),
                                         # ('f0_harmonic', 45),
                                         ('noise_magnitudes_1', 45),
-                                        ('noise_magnitudes_2', 45),
+                                        # ('noise_magnitudes_2', 45),
                                     ))
 
     # Create latent distributions
@@ -282,16 +284,21 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     # harmonic = ddsp.synths.Harmonic(n_samples=n_samples,
     #                                 sample_rate=sample_rate,
     #                                 name='harmonic')
+    inharmonic = ddsp.synths.Sinusoidal(
+        n_samples=n_samples,
+        sample_rate=sample_rate,
+        name='sinusoidal',
+    )
 
     noise1 = ddsp.synths.FilteredNoise(n_samples=n_samples,
                                       window_size=0,
                                       initial_bias=0,
                                       name='noise1')
 
-    noise2 = ddsp.synths.FilteredNoise(n_samples=n_samples,
-                                      window_size=0,
-                                      initial_bias=0.0,
-                                      name='noise2')
+    # noise2 = ddsp.synths.FilteredNoise(n_samples=n_samples,
+    #                                   window_size=0,
+    #                                   initial_bias=0.0,
+    #                                   name='noise2')
     add = ddsp.processors.Add(name='add')
     # reverb = ddsp.effects.Reverb(
     #     name='reverb',
@@ -302,9 +309,10 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     # Create ProcessorGroup.
     dag = [
         # (harmonic, ['amps', 'harmonic_distribution', 'f0_harmonic']),
+        (inharmonic, ['sin_amps', 'sin_freqs']),
         (noise1, ['noise_magnitudes_1']),
-        (noise2, ['noise_magnitudes_2']),
-        (add, ['noise1/signal', 'noise2/signal']),
+        # (noise2, ['noise_magnitudes_2']),
+        (add, ['noise1/signal', 'inharmonic/signal']),
         # (reverb, ['add/signal']),
     ]
 
