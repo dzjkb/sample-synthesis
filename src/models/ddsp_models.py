@@ -287,7 +287,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     inharmonic = ddsp.synths.Sinusoidal(
         n_samples=n_samples,
         sample_rate=sample_rate,
-        name='sinusoidal',
+        name='inharmonic',
     )
 
     noise1 = ddsp.synths.FilteredNoise(n_samples=n_samples,
