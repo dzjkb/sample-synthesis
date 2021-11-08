@@ -100,7 +100,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
     distribution_args = {
         'z_dims': z_dims,
         'base_distribution': tfd.MultivariateNormalDiag,
-        'n_flows': 2,
+        'n_flows': 3,
         'time_steps': time_steps,
         'flow_hidden_units': [64, 64],
     }
@@ -273,7 +273,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     distribution_args = {
         'z_dims': z_dims,
         'base_distribution': tfd.MultivariateNormalDiag,
-        'n_flows': 2,
+        'n_flows': 4,
         'time_steps': time_steps,
         'flow_hidden_units': [16, 16],
     }
@@ -292,7 +292,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
 
     noise1 = ddsp.synths.FilteredNoise(n_samples=n_samples,
                                       window_size=0,
-                                      initial_bias=0,
+                                      initial_bias=-2.0,
                                       name='noise1')
 
     # noise2 = ddsp.synths.FilteredNoise(n_samples=n_samples,
