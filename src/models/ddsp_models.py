@@ -299,7 +299,8 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     #                                   window_size=0,
     #                                   initial_bias=0.0,
     #                                   name='noise2')
-    add = ddsp.processors.Add(name='add')
+    add1 = ddsp.processors.Add(name='add1')
+    add2 = ddsp.processors.Add(name='add2')
     # reverb = ddsp.effects.Reverb(
     #     name='reverb',
     #     trainable=True,
@@ -312,7 +313,8 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
         (inharmonic, ['sin_amps', 'sin_freqs']),
         (noise1, ['noise_magnitudes_1']),
         # (noise2, ['noise_magnitudes_2']),
-        (add, ['noise1/signal', 'inharmonic/signal', 'harmonic/signal']),
+        (add1, ['noise1/signal', 'inharmonic/signal']),
+        (add2, ['add1/signal', 'harmonic/signal']),
         # (reverb, ['add/signal']),
     ]
 
