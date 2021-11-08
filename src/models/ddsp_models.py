@@ -251,14 +251,14 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
                                     rnn_type = 'gru',
                                     ch = 256,
                                     layers_per_stack = 1,
-                                    input_keys = ('z'),
+                                    input_keys = ('z', 'f0_scaled'),
                                     # input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (
-                                        # ('amps', 1),
+                                        ('amps', 1),
                                         ('sin_amps', 32),
                                         ('sin_freqs', 32),
-                                        # ('harmonic_distribution', 45),
-                                        # ('f0_harmonic', 45),
+                                        ('harmonic_distribution', 45),
+                                        ('f0_harmonic', 45),
                                         ('noise_magnitudes_1', 45),
                                         # ('noise_magnitudes_2', 45),
                                     ))
@@ -281,9 +281,9 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     prior = IAFPrior(**distribution_args)
 
     # Create Processors.
-    # harmonic = ddsp.synths.Harmonic(n_samples=n_samples,
-    #                                 sample_rate=sample_rate,
-    #                                 name='harmonic')
+    harmonic = ddsp.synths.Harmonic(n_samples=n_samples,
+                                    sample_rate=sample_rate,
+                                    name='harmonic')
     inharmonic = ddsp.synths.Sinusoidal(
         n_samples=n_samples,
         sample_rate=sample_rate,
@@ -308,11 +308,11 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
 
     # Create ProcessorGroup.
     dag = [
-        # (harmonic, ['amps', 'harmonic_distribution', 'f0_harmonic']),
+        (harmonic, ['amps', 'harmonic_distribution', 'f0_harmonic']),
         (inharmonic, ['sin_amps', 'sin_freqs']),
         (noise1, ['noise_magnitudes_1']),
         # (noise2, ['noise_magnitudes_2']),
-        (add, ['noise1/signal', 'inharmonic/signal']),
+        (add, ['noise1/signal', 'inharmonic/signal', 'harmonic/signal']),
         # (reverb, ['add/signal']),
     ]
 
