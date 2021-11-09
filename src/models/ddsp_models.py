@@ -13,7 +13,7 @@ from .ddsp_vae import VAE, IAF, IAFPrior, GaussPosterior, GaussPrior
 from .ddsp_losses import KLRegularizer
 
 
-def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None):
+def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None, kl_min=None):
     # Create Neural Networks.
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
 
@@ -73,7 +73,7 @@ def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None):
     )
 
 
-def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
+def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # parameters
     z_dims = 32
 
@@ -139,7 +139,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
         mag_weight=1.0,
         logmag_weight=1.0,
     )
-    kl_loss = KLRegularizer(weight=kl_weight)
+    kl_loss = KLRegularizer(weight=kl_weight, kl_min=kl_min)
 
     return VAE(
         preprocessor=preprocessor,
@@ -152,7 +152,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight):
     )
 
 
-def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight):
+def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # parameters
     z_dims = 32
 
@@ -215,7 +215,7 @@ def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight):
         mag_weight=1.0,
         logmag_weight=1.0,
     )
-    kl_loss = KLRegularizer(weight=kl_weight)
+    kl_loss = KLRegularizer(weight=kl_weight, kl_min=kl_min)
 
     return VAE(
         preprocessor=preprocessor,
@@ -228,7 +228,7 @@ def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight):
     )
 
 
-def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
+def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     """
     For the snares dataset, there is no need for the harmonic synthesizer
     (and so f0), so we put in two noise synths instead
@@ -326,7 +326,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
         mag_weight=1.0,
         logmag_weight=1.0,
     )
-    kl_loss = KLRegularizer(weight=kl_weight)
+    kl_loss = KLRegularizer(weight=kl_weight, kl_min=kl_min)
 
     return VAE(
         preprocessor=preprocessor,
@@ -339,21 +339,31 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight):
     )
 
 
-def get_trainer(model_name, time_steps, sample_rate, n_samples, kl_weight, strategy=None, restore_checkpoint=None, **trainer_kwargs):
+def get_trainer(
+    model_name,
+    time_steps,
+    sample_rate,
+    n_samples,
+    kl_weight,
+    kl_min=0,
+    strategy=None,
+    restore_checkpoint=None,
+    **trainer_kwargs
+):
     if not strategy:
         strategy = strat()
 
     with strategy.scope():
-        model = get_model(model_name, time_steps, sample_rate, n_samples, kl_weight=kl_weight)
+        model = get_model(model_name, time_steps, sample_rate, n_samples, kl_weight=kl_weight, kl_min=kl_min)
         trainer = trainers.Trainer(model, strategy, **trainer_kwargs)
 
     return trainer
 
 
-def get_model(model_name, time_steps, sample_rate, n_samples, kl_weight):
+def get_model(model_name, time_steps, sample_rate, n_samples, kl_weight, kl_min):
     return {
         'ddsp_autoenc': get_ddsp_model,
         'iaf_vae': get_iaf_vae,
         'gauss_vae': get_gauss_vae,
         'snares_vae': get_snares_vae,
-    }[model_name](time_steps, sample_rate, n_samples, kl_weight)
+    }[model_name](time_steps, sample_rate, n_samples, kl_weight, kl_min)

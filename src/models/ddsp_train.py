@@ -28,6 +28,7 @@ def main(
     steps_per_summary: int = 2000,
     synth_params_summary: bool = False,
     kl_weight: int = 1,
+    kl_min: int = 0,
     checkpoint_dir: str = None,
     **kwargs,
 ):
@@ -77,6 +78,7 @@ def main(
         n_samples=sample_rate * example_secs,
         learning_rate=lr,
         kl_weight=kl_weight,
+        kl_min=kl_min,
     )
 
     trainer.build(first_example)
