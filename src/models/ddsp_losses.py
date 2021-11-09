@@ -9,9 +9,10 @@ class KLRegularizer(losses.Loss):
     logp should be log p(z) - the prior logprob of z
     """
 
-    def __init__(self, weight, name="kl_term"):
+    def __init__(self, weight, name="kl_term", kl_min=0):
         super().__init__(name=name)
         self.weight = weight
+        self.kl_min = kl_min
 
     def call(self, logq, logp):
-        return tf.constant(self.weight, dtype=tf.float32) * tf.reduce_sum(logq - logp)
+        return tf.constant(self.weight, dtype=tf.float32) * tf.maximum(self.kl_min, tf.reduce_mean(logq - logp))
