@@ -247,7 +247,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
         input_keys = ('audio',),
         mean_aggregate=True,
     )
-    decoder = decoders.RnnFcDecoder(rnn_channels = 256,
+    decoder = decoders.RnnFcDecoder(rnn_channels = 512,
                                     rnn_type = 'gru',
                                     ch = 256,
                                     layers_per_stack = 1,
