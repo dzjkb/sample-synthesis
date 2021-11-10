@@ -2,6 +2,7 @@ import datetime as dt
 import argparse
 import yaml
 import os.path
+from shutil import copy
 
 import tensorflow as tf
 
@@ -30,12 +31,15 @@ def main(
     kl_weight: int = 1,
     kl_min: int = 0,
     checkpoint_dir: str = None,
+    cfg_path: str = None,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
     run_name = f"{run_name}_{run_timestamp}"
 
     save_dir = get_full_checkpoint_dir(checkpoint_dir) if checkpoint_dir else get_save_dir(run_name)
+    if cfg_path:
+        copy(cfg_path, save_dir)
 
     logger.info("")
     logger.info("==============================")
@@ -123,4 +127,4 @@ if __name__ == '__main__':
     with open(args.cfg) as cfg_f:
         cfg = yaml.load(cfg_f, Loader=yaml.FullLoader)
 
-    main(**cfg)
+    main(cfg_path=args.cfg, **cfg)
