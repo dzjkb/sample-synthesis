@@ -13,7 +13,11 @@ def get_save_dir(run_name):
     if not os.path.exists(date_dir):
         os.makedirs(date_dir, exist_ok=True)
 
-    return f"{date_dir}/{run_name}"
+    save_dir = f"{date_dir}/{run_name}"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    return save_dir
 
 
 def get_full_checkpoint_dir(path):
