@@ -12,7 +12,12 @@ from .logger import get_logger
 from .model_utils import get_save_dir
 from .ddsp_models import get_trainer
 from ..data.dataset import get_provider
-from ..evaluation.ddsp_eval import sample, get_evaluator_classes
+from ..evaluation.ddsp_eval import (
+    sample,
+    get_evaluator_classes,
+    FadEvaluator,
+    STATS_DIR,
+)
 
 logger = get_logger(__name__, 'DEBUG')
 
@@ -33,6 +38,7 @@ def main(
     kl_min: int = 0,
     checkpoint_dir: str = None,
     cfg_path: str = None,
+    debug_dump: bool = False,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
@@ -61,11 +67,12 @@ def main(
     logger.debug(f"{kl_weight=}")
     logger.debug(f"{kl_min=}")
 
-    # tf.debugging.experimental.enable_dump_debug_info(
-    #     save_dir,
-    #     tensor_debug_mode="CURT_HEALTH",
-    #     circular_buffer_size=100000,
-    # )
+    if debug_dump:
+        tf.debugging.experimental.enable_dump_debug_info(
+            save_dir,
+            tensor_debug_mode="CURT_HEALTH",
+            circular_buffer_size=100000,
+        )
     tf.summary.trace_on(
         graph=True, profiler=False
     )
@@ -95,7 +102,12 @@ def main(
         load_model(trainer, checkpoint_dir)
 
     summary_writer = tf.summary.create_file_writer(save_dir)
-    evaluator_classes = get_evaluator_classes(dataset)
+    # evaluator_classes = get_evaluator_classes(dataset)
+    # fad_evaluator = FadEvaluator(
+    #     sample_rate,
+    #     frame_rate,
+    #     f"{STATS_DIR}/{dataset}",
+    # )
 
     with summary_writer.as_default():
         tf.summary.trace_export("graph_summary", step=1)
@@ -118,6 +130,7 @@ def main(
                     step=step + 1,
                     n_gen=10,
                     synth_params=synth_params_summary,
+                    # fad_evaluator=fad_evaluator,
                 )
 
         trainer.save(save_dir)

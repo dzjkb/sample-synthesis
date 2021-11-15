@@ -115,7 +115,7 @@ def synth_audio_summary(outputs, step, sample_rate, synths=("harmonic", "noise")
         summaries.audio_summary(audio, step, sample_rate=sample_rate, name=f"{key} synth - audio")
 
 
-def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, synth_params=False):
+def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, synth_params=False, fad_evaluator=None):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
     batch = next(iter(random_batch_ds))
 
@@ -140,11 +140,14 @@ def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, sy
                 sp_summary(sampled, step)
                 synth_audio_summary(sampled, step, sample_rate=sample_rate)
 
+            if fad_evaluator:
+                fad_evaluator.evaluate(batch, sampled)
+
 
 def get_evaluator_classes(dataset):
     return [
         evaluators.F0LdEvaluator,
-        partial(FadEvaluator, trainset_stats=f"{STATS_DIR}/{dataset}"),
+        # partial(FadEvaluator, trainset_stats=f"{STATS_DIR}/{dataset}"),
     ]
 
 
@@ -154,7 +157,7 @@ class FadEvaluator(evaluators.BaseEvaluator):
         self._fad_metric = FadMetric(sample_rate, frame_rate, base_stats=trainset_stats)
 
     def evaluate(self, batch, outputs, losses=None):
-        audio_gen = outputs['audio_gen']
+        audio_gen = outputs['audio_synth']
         self._fad_metric.update_state(batch, audio_gen)
 
     def flush(self, step):

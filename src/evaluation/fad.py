@@ -66,7 +66,8 @@ def get_fad_embeddings(
         | 'Write Stats' >> WriteToTFRecord(
             output_path,
             shard_name_template='',
-            coder=beam.coders.ProtoCoder(tf.train.Example)))
+            coder=beam.coders.ProtoCoder(tf.train.Example))
+    )
 
     result = pipeline.run()
     result.wait_until_finish()
