@@ -39,7 +39,7 @@ def main(
     checkpoint_dir: str = None,
     cfg_path: str = None,
     debug_dump: bool = False,
-    weight_hists: list[str] = None,
+    weight_hists: list = None,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
