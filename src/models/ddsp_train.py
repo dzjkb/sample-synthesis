@@ -39,6 +39,7 @@ def main(
     checkpoint_dir: str = None,
     cfg_path: str = None,
     debug_dump: bool = False,
+    weight_hists: list[str] = None,
     **kwargs,
 ):
     run_timestamp = dt.datetime.now().strftime('%H-%M-%S')
@@ -131,6 +132,7 @@ def main(
                     n_gen=10,
                     synth_params=synth_params_summary,
                     # fad_evaluator=fad_evaluator,
+                    weights=weight_hists,
                 )
 
         trainer.save(save_dir)

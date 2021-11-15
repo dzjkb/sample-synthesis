@@ -1,7 +1,7 @@
 # import yaml
 # import argparse
 # from os.path import join
-from functools import partial
+from functools import partial, reduce
 import tempfile
 
 from ddsp.training import (
@@ -115,7 +115,23 @@ def synth_audio_summary(outputs, step, sample_rate, synths=("harmonic", "noise")
         summaries.audio_summary(audio, step, sample_rate=sample_rate, name=f"{key} synth - audio")
 
 
-def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, synth_params=False, fad_evaluator=None):
+def _rgetattr(obj, attr, *args):
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    return reduce(_getattr, [obj] + attr.split('.'))
+
+
+def sample(
+    model,
+    data_provider,
+    sample_rate,
+    checkpoint_dir,
+    step,
+    n_gen=10,
+    synth_params=False,
+    fad_evaluator=None,
+    weights=None,
+):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
     batch = next(iter(random_batch_ds))
 
@@ -131,6 +147,10 @@ def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, sy
         if synth_params:
             sp_summary(outputs, step)
             synth_audio_summary(outputs, step, sample_rate=sample_rate)
+
+        if weights:
+            for w in weights:
+                tf.summary.histogram(f"weights/{w}", _rgetattr(model, w))
 
         if hasattr(model, "sample"):
             sampled = model.sample(batch)
