@@ -115,7 +115,6 @@ def main(
                     data_provider,
                     sample_rate=sample_rate,
                     checkpoint_dir=f"{os.path.basename(save_dir)}/{run_name}",
-                    evaluator_classes=
                     step=step + 1,
                     n_gen=10,
                     synth_params=synth_params_summary,
