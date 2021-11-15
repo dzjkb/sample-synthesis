@@ -70,8 +70,8 @@ def main(
     if debug_dump:
         tf.debugging.experimental.enable_dump_debug_info(
             save_dir,
-            tensor_debug_mode="CURT_HEALTH",
-            circular_buffer_size=100000,
+            tensor_debug_mode="FULL_HEALTH",
+            circular_buffer_size=-1,
         )
     tf.summary.trace_on(
         graph=True, profiler=False
