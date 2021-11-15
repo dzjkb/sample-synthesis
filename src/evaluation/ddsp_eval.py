@@ -150,7 +150,7 @@ def sample(
 
         if weights:
             for w in weights:
-                tf.summary.histogram(f"weights/{w}", _rgetattr(model, w))
+                tf.summary.histogram(f"weights/{w}", _rgetattr(model, w), step=step)
 
         if hasattr(model, "sample"):
             sampled = model.sample(batch)
