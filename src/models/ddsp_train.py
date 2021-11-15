@@ -5,13 +5,14 @@ import os.path
 from shutil import copy
 
 import tensorflow as tf
+from ddsp.training.eval_util import evaluate
 
 from .model_utils import load_model, get_full_checkpoint_dir
 from .logger import get_logger
 from .model_utils import get_save_dir
 from .ddsp_models import get_trainer
 from ..data.dataset import get_provider
-from ..evaluation.ddsp_eval import sample
+from ..evaluation.ddsp_eval import sample, get_evaluator_classes
 
 logger = get_logger(__name__, 'DEBUG')
 
@@ -57,11 +58,13 @@ def main(
     logger.debug(f"{example_secs=}")
     logger.debug(f"{sample_rate=}")
     logger.debug(f"{frame_rate=}")
+    logger.debug(f"{kl_weight=}")
+    logger.debug(f"{kl_min=}")
 
     # tf.debugging.experimental.enable_dump_debug_info(
     #     save_dir,
-    #     tensor_debug_mode="FULL_HEALTH",
-    #     circular_buffer_size=-1,
+    #     tensor_debug_mode="CURT_HEALTH",
+    #     circular_buffer_size=100000,
     # )
     tf.summary.trace_on(
         graph=True, profiler=False
@@ -92,6 +95,7 @@ def main(
         load_model(trainer, checkpoint_dir)
 
     summary_writer = tf.summary.create_file_writer(save_dir)
+    evaluator_classes = get_evaluator_classes(dataset)
 
     with summary_writer.as_default():
         tf.summary.trace_export("graph_summary", step=1)
@@ -111,12 +115,18 @@ def main(
                     data_provider,
                     sample_rate=sample_rate,
                     checkpoint_dir=f"{os.path.basename(save_dir)}/{run_name}",
+                    evaluator_classes=
                     step=step + 1,
                     n_gen=10,
                     synth_params=synth_params_summary,
                 )
 
         trainer.save(save_dir)
+
+    # evaluate(
+    #     data_provider,
+    #     trainer.model,
+    # )
 
 
 if __name__ == '__main__':

@@ -1,14 +1,26 @@
-import yaml
-import argparse
+# import yaml
+# import argparse
 # from os.path import join
+from functools import partial
+import tempfile
 
-from ddsp.training import summaries
+from ddsp.training import (
+    summaries,
+    evaluators,
+    metrics,
+)
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
-from ..models.ddsp_models import get_trainer
+# from ..models.ddsp_models import get_trainer
 from ..models.model_utils import strat
-from ..data.dataset import get_provider
+from .fad import (
+    get_fad_embeddings,
+    STATS_DIR,
+    get_fad_distance,
+)
+# from ..data.dataset import get_provider
 # from ..data.paths import GENERATED
 # from .utils import save_wav
 
@@ -128,49 +140,89 @@ def sample(model, data_provider, sample_rate, checkpoint_dir, step, n_gen=10, sy
                 sp_summary(sampled, step)
                 synth_audio_summary(sampled, step, sample_rate=sample_rate)
 
-    # for i in range(n_gen):
-    #     save_wav(join(GENERATED, checkpoint_dir, f'{i}_eval_sample.wav'), audio[i], sr=sample_rate)
-    #     save_wav(join(GENERATED, checkpoint_dir, f'{i}_gen_sample.wav'), audio_gen[i], sr=sample_rate)
+
+def get_evaluator_classes(dataset):
+    return [
+        evaluators.F0LdEvaluator,
+        partial(FadEvaluator, trainset_stats=f"{STATS_DIR}/{dataset}"),
+    ]
 
 
-def main(
-    run_name: str,
-    eval_checkpoint: str,
-    dataset: str,
-    # architecture: str,
-    example_secs: int,
-    sample_rate: int,
-    frame_rate: int,
-    **kwargs,
-):
-    data_provider = get_provider(
-        dataset,
-        example_secs,
-        sample_rate,
-        frame_rate,
-    )
+class FadEvaluator(evaluators.BaseEvaluator):
+    def __init__(self, sample_rate, frame_rate, trainset_stats):
+        super().__init__(sample_rate, frame_rate)
+        self._fad_metric = FadMetric(sample_rate, frame_rate, base_stats=trainset_stats)
 
-    trainer = get_trainer(
-        time_steps=frame_rate * example_secs,
-        sample_rate=sample_rate,
-        n_samples=sample_rate * example_secs,
-        restore_checkpoint=eval_checkpoint,
-    )
+    def evaluate(self, batch, outputs, losses=None):
+        audio_gen = outputs['audio_gen']
+        self._fad_metric.update_state(batch, audio_gen)
 
-    sample(
-        trainer.model,
-        data_provider,
-        sample_rate=sample_rate,
-        checkpoint=eval_checkpoint,
-    )
+    def flush(self, step):
+        self._fad_metric.flush(step)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cfg", "-c", type=str)
-    args = parser.parse_args()
+class FadMetric(metrics.BaseMetrics):
+    def __init__(self, sample_rate, frame_rate, base_stats, name="fad"):
+        super().__init__(sample_rate, frame_rate, name=name)
+        self._base_stats_file = base_stats
+        self._metrics = {
+            'fad': tf.keras.metrics.Mean('fad')
+        }
 
-    with open(args.cfg) as cfg_f:
-        cfg = yaml.load(cfg_f, Loader=yaml.FullLoader)
+    @property
+    def metrics(self):
+        return self._metrics
 
-    main(**cfg)
+    def update_state(self, batch, audio_gen):
+        batch_stats_file = tempfile.NamedTemporaryFile()
+        batch_stats = batch_stats_file.name
+        get_fad_embeddings(
+            audio_gen,
+            batch_stats,
+        )
+
+        fad = get_fad_distance(batch_stats, self._base_stats_file)
+        self._metrics['fad'].update_state(fad)
+
+
+# def main(
+#     run_name: str,
+#     eval_checkpoint: str,
+#     dataset: str,
+#     # architecture: str,
+#     example_secs: int,
+#     sample_rate: int,
+#     frame_rate: int,
+#     **kwargs,
+# ):
+#     data_provider = get_provider(
+#         dataset,
+#         example_secs,
+#         sample_rate,
+#         frame_rate,
+#     )
+
+#     trainer = get_trainer(
+#         time_steps=frame_rate * example_secs,
+#         sample_rate=sample_rate,
+#         n_samples=sample_rate * example_secs,
+#         restore_checkpoint=eval_checkpoint,
+#     )
+
+#     sample(
+#         trainer.model,
+#         data_provider,
+#         sample_rate=sample_rate,
+#         checkpoint=eval_checkpoint,
+#     )
+
+
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--cfg", "-c", type=str)
+#     args = parser.parse_args()
+
+#     with open(args.cfg) as cfg_f:
+#         cfg = yaml.load(cfg_f, Loader=yaml.FullLoader)
+
+#     main(**cfg)
