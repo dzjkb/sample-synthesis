@@ -281,7 +281,7 @@ class VAE(Model):
 
     def sample(self, features, latent_key='z'):
         needed_features = {}
-        for k in self.preprocessor.all_input_keys + ['audio', 'f0_confidence']:
+        for k in self.preprocessor.all_input_keys + ['audio']:
             needed_features[k] = features[k]
 
         needed_features.update(self.preprocessor(needed_features, training=False))

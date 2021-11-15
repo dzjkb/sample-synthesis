@@ -7,10 +7,24 @@ from ddsp.training import (
     trainers,
 )
 from tensorflow_probability import distributions as tfd
+import tensorflow.keras.regularizers as tfkreg
 
 from .model_utils import strat
 from .ddsp_vae import VAE, IAF, IAFPrior, GaussPosterior, GaussPrior
 from .ddsp_losses import KLRegularizer
+from .ddsp_encoders import MfccRegularizedRnnEncoder
+
+RNN_REGULARIZERS = dict(
+    kernel_regularizer=tfkreg.L2(l2=0.1),
+    recurrent_regularizer=None,
+    bias_regularizer=tfkreg.L2(l2=0.1),
+    activity_regularizer=None,
+    kernel_constraint=None,
+    recurrent_constraint=None,
+    bias_constraint=None,
+    dropout=0.0,
+    recurrent_dropout=0.0,
+)
 
 
 def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None, kl_min=None):
@@ -80,12 +94,13 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # Create Neural Networks.
 
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
-    encoder = encoders.MfccRnnEncoder(
+    encoder = MfccRegularizedRnnEncoder(
         rnn_channels=512,
         rnn_type='gru',
         z_dims=z_dims * 3,
         input_keys = ('audio',),
         mean_aggregate=True,
+        **RNN_REGULARIZERS,
     )
     decoder = decoders.RnnFcDecoder(rnn_channels = 256,
                                     rnn_type = 'gru',
@@ -159,12 +174,13 @@ def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # Create Neural Networks.
 
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
-    encoder = encoders.MfccRnnEncoder(
+    encoder = MfccRegularizedRnnEncoder(
         rnn_channels=512,
         rnn_type='gru',
         z_dims=z_dims * 2,
         input_keys = ('audio',),
         mean_aggregate=True,
+        **RNN_REGULARIZERS,
     )
     decoder = decoders.RnnFcDecoder(rnn_channels = 256,
                                     rnn_type = 'gru',
@@ -240,12 +256,13 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # Create Neural Networks.
 
     preprocessor = preprocessing.F0LoudnessPreprocessor(time_steps=time_steps)
-    encoder = encoders.MfccRnnEncoder(
+    encoder = MfccRegularizedRnnEncoder(
         rnn_channels=512,
         rnn_type='gru',
         z_dims=z_dims * 3,#2,  # depends on how many inputs the latent distributions take
         input_keys = ('audio',),
         mean_aggregate=True,
+        **RNN_REGULARIZERS,
     )
     decoder = decoders.RnnFcDecoder(rnn_channels = 512,
                                     rnn_type = 'gru',

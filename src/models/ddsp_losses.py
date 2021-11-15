@@ -15,4 +15,4 @@ class KLRegularizer(losses.Loss):
         self.kl_min = kl_min
 
     def call(self, logq, logp):
-        return tf.maximum(tf.constant(self.kl_min, dtype=tf.float32), tf.constant(self.weight, dtype=tf.float32) * tf.reduce_mean(logq - logp))
+        return tf.constant(self.weight, dtype=tf.float32) * tf.maximum(tf.constant(self.kl_min, dtype=tf.float32), tf.reduce_mean(logq - logp))
