@@ -67,7 +67,7 @@ class MfccRegularizedRnnEncoder(encoders.MfccRnnEncoder):
         dropout=0.0,
         recurrent_dropout=0.0,
         **kwargs,
-    )
+    ):
     super().__init__(
         rnn_channels=rnn_channels,
         rnn_type=rnn_type,
