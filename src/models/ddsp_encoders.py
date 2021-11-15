@@ -68,24 +68,24 @@ class MfccRegularizedRnnEncoder(encoders.MfccRnnEncoder):
         recurrent_dropout=0.0,
         **kwargs,
     ):
-    super().__init__(
-        rnn_channels=rnn_channels,
-        rnn_type=rnn_type,
-        z_dims=z_dims,
-        mean_aggregate=mean_aggregate,
-        **kwargs,
-    )
+        super().__init__(
+            rnn_channels=rnn_channels,
+            rnn_type=rnn_type,
+            z_dims=z_dims,
+            mean_aggregate=mean_aggregate,
+            **kwargs,
+        )
 
-    self.rnn = RegularizedRnn(
-        rnn_channels,
-        rnn_type,
-        kernel_regularizer=kernel_regularizer,
-        recurrent_regularizer=recurrent_regularizer,
-        bias_regularizer=bias_regularizer,
-        activity_regularizer=activity_regularizer,
-        kernel_constraint=kernel_constraint,
-        recurrent_constraint=recurrent_constraint,
-        bias_constraint=bias_constraint,
-        dropout=dropout,
-        recurrent_dropout=recurrent_dropout,
-    )
+        self.rnn = RegularizedRnn(
+            rnn_channels,
+            rnn_type,
+            kernel_regularizer=kernel_regularizer,
+            recurrent_regularizer=recurrent_regularizer,
+            bias_regularizer=bias_regularizer,
+            activity_regularizer=activity_regularizer,
+            kernel_constraint=kernel_constraint,
+            recurrent_constraint=recurrent_constraint,
+            bias_constraint=bias_constraint,
+            dropout=dropout,
+            recurrent_dropout=recurrent_dropout,
+        )
