@@ -89,7 +89,7 @@ def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None, kl_min=No
 
 def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # parameters
-    z_dims = 32
+    z_dims = 256
 
     # Create Neural Networks.
 
@@ -169,7 +169,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
 
 def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # parameters
-    z_dims = 32
+    z_dims = 256
 
     # Create Neural Networks.
 
@@ -251,7 +251,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     """
 
     # parameters
-    z_dims = 32
+    z_dims = 256
 
     # Create Neural Networks.
 

@@ -2,8 +2,10 @@
 # import argparse
 # from os.path import join
 from functools import partial, reduce
+from itertools import islice
 import tempfile
 
+from ddsp import spectral_ops
 from ddsp.training import (
     summaries,
     evaluators,
@@ -131,9 +133,11 @@ def sample(
     synth_params=False,
     fad_evaluator=None,
     weights=None,
+    trainset_distance=None,
 ):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
-    batch = next(iter(random_batch_ds))
+    ds_iter = iter(random_batch_ds)
+    batch = next(ds_iter)
 
     with strat().scope():
         outputs = model(batch, training=False)
@@ -162,6 +166,15 @@ def sample(
 
             if fad_evaluator:
                 fad_evaluator.evaluate(batch, sampled)
+
+            if trainset_distance:
+                big_batch = tf.stack(list(islice(ds_iter, n_gen * 10)))
+                min_dist, avg_dist = distances(big_batch, sampled_gen)
+
+                for i, dist in enumerate(min_dist):
+                    tf.summary.scalar(f"min_distance/sample_{i}", dist, step=step)
+                for i, dist in enumerate(avg_dist):
+                    tf.summary.scalar(f"avg_distance/sample_{i}", dist, step=step)
 
 
 def get_evaluator_classes(dataset):
@@ -206,6 +219,45 @@ class FadMetric(metrics.BaseMetrics):
 
         fad = get_fad_distance(batch_stats, self._base_stats_file)
         self._metrics['fad'].update_state(fad)
+
+
+def distances(batch, audio_gen, fft_sizes=(2048, 1024, 512, 256, 128, 64)):
+    """
+    for a (N, n_samples) batch['audio'] and (M, n_samples) audio_gen returns
+    two tensors of shape (M,) indicating the minimum and average distance, respectively,
+    of each audio_gen audio sample to all batch['audio'] samples
+    """
+
+    all_min_dists = []
+    all_avg_dists = []
+
+    for size in fft_sizes:
+        spec_op = partial(spectral_ops.compute_mag, size=size)
+        target_mag = spec_op(batch['audio'])
+        value_mag = spec_op(audio_gen)
+
+        value_dists_standard = [
+            tf.reduce_mean(tf.abs(target_mag - tf.stack([v] * tf.shape(target_mag)[0])), axis=(1, 2))
+            for v in tf.unstack(value_mag)
+        ]
+        value_dists_log = [
+            tf.reduce_mean(
+                tf.abs(spectral_ops.safe_log(target_mag) - tf.stack([v] * tf.shape(target_mag)[0])),
+                axis=(1, 2),
+            )
+            for v in tf.unstack(spectral_ops.safe_log(value_mag))
+        ]
+        value_dists = [standard + log for standard, log in zip(value_dists_standard, value_dists_log)]
+
+        min_dists = tf.stack([tf.reduce_min(d) for d in value_dists])
+        avg_dists = tf.stack([tf.reduce_mean(d) for d in value_dists])
+        all_min_dists.append(min_dists)
+        all_avg_dists.append(avg_dists)
+
+    min_dist = tf.reduce_mean(tf.stack(all_min_dists), axis=1)
+    avg_dist = tf.reduce_mean(tf.stack(all_avg_dists), axis=1)
+
+    return min_dist, avg_dist
 
 
 # def main(
