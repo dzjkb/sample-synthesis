@@ -15,9 +15,11 @@ from .ddsp_losses import KLRegularizer
 from .ddsp_encoders import MfccRegularizedRnnEncoder
 
 RNN_REGULARIZERS = dict(
-    kernel_regularizer=tfkreg.L2(l2=0.1),
+    # kernel_regularizer=tfkreg.L2(l2=0.1),
+    kernel_regularizer=None,
     recurrent_regularizer=None,
-    bias_regularizer=tfkreg.L2(l2=0.1),
+    # bias_regularizer=tfkreg.L2(l2=0.1),
+    bias_regularizer=None,
     activity_regularizer=None,
     kernel_constraint=None,
     recurrent_constraint=None,

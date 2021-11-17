@@ -104,11 +104,11 @@ def main(
 
     summary_writer = tf.summary.create_file_writer(save_dir)
     # evaluator_classes = get_evaluator_classes(dataset)
-    # fad_evaluator = FadEvaluator(
-    #     sample_rate,
-    #     frame_rate,
-    #     f"{STATS_DIR}/{dataset}",
-    # )
+    fad_evaluator = FadEvaluator(
+        sample_rate,
+        frame_rate,
+        f"{STATS_DIR}/{dataset}",
+    )
 
     with summary_writer.as_default():
         tf.summary.trace_export("graph_summary", step=1)
@@ -131,8 +131,9 @@ def main(
                     step=step + 1,
                     n_gen=10,
                     synth_params=synth_params_summary,
-                    # fad_evaluator=fad_evaluator,
+                    fad_evaluator=fad_evaluator,
                     weights=weight_hists,
+                    trainset_distance=True,
                 )
 
         trainer.save(save_dir)
