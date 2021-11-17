@@ -24,7 +24,7 @@ logger = get_logger(__name__, 'DEBUG')
 
 def main(
     run_name: str,
-    dataset: str,
+    dataset_name: str,
     model_name: str = 'iaf_vae',
     lr: float = 1e-3,
     training_steps: int = 100,
@@ -59,7 +59,7 @@ def main(
     logger.info("==============================")
     logger.info("")
     logger.debug(f"{run_name=}")
-    logger.debug(f"{dataset=}")
+    logger.debug(f"{dataset_name=}")
     logger.debug(f"{lr=}")
     logger.debug(f"{training_steps=}")
     logger.debug(f"{example_secs=}")
@@ -78,7 +78,7 @@ def main(
         graph=True, profiler=False
     )
 
-    data_provider = get_provider(dataset, example_secs, sample_rate, frame_rate)
+    data_provider = get_provider(dataset_name, example_secs, sample_rate, frame_rate)
     dataset = data_provider.get_batch(batch_size, shuffle=True)
     # TODO: ds stats?
     logger.debug("Dataset information:")
@@ -107,7 +107,7 @@ def main(
     fad_evaluator = FadEvaluator(
         sample_rate,
         frame_rate,
-        f"{STATS_DIR}/{dataset}",
+        f"{STATS_DIR}/{dataset_name}",
     )
 
     with summary_writer.as_default():
