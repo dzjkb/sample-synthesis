@@ -131,9 +131,9 @@ def main(
                     step=step + 1,
                     n_gen=10,
                     synth_params=synth_params_summary,
-                    fad_evaluator=fad_evaluator,
                     weights=weight_hists,
-                    trainset_distance=True,
+                    # fad_evaluator=fad_evaluator,
+                    # trainset_distance=True,
                 )
 
         trainer.save(save_dir)
@@ -141,6 +141,7 @@ def main(
     # evaluate(
     #     data_provider,
     #     trainer.model,
+    #     evaluator_classes=evaluator_classes,
     # )
 
 

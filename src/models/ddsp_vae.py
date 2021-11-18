@@ -279,6 +279,7 @@ class VAE(Model):
 
         return outputs
 
+    @tf.function
     def sample(self, features, latent_key='z'):
         needed_features = {}
         for k in self.preprocessor.all_input_keys + ['audio']:

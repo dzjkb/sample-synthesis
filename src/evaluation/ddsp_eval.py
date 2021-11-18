@@ -6,6 +6,7 @@ from itertools import islice
 import tempfile
 
 from ddsp import spectral_ops
+from ddsp.core import tf_float32
 from ddsp.training import (
     summaries,
     evaluators,
@@ -19,7 +20,6 @@ import tensorflow as tf
 from ..models.model_utils import strat
 from .fad import (
     get_fad_embeddings,
-    STATS_DIR,
     get_fad_distance,
 )
 # from ..data.dataset import get_provider
@@ -168,7 +168,10 @@ def sample(
                 fad_evaluator.evaluate(batch, sampled)
 
             if trainset_distance:
-                big_batch = tf.stack(list(islice(ds_iter, n_gen * 10)))
+                big_batch = tf.concat(
+                    list(map(lambda d: d['audio'], islice(ds_iter, n_gen * 10))),
+                    axis=0,
+                )
                 min_dist, avg_dist = distances(big_batch, sampled_gen)
 
                 for i, dist in enumerate(min_dist):
@@ -223,9 +226,9 @@ class FadMetric(metrics.BaseMetrics):
 
 def distances(batch, audio_gen, fft_sizes=(2048, 1024, 512, 256, 128, 64)):
     """
-    for a (N, n_samples) batch['audio'] and (M, n_samples) audio_gen returns
+    for (N, n_samples) batch and (M, n_samples) audio_gen tensors returns
     two tensors of shape (M,) indicating the minimum and average distance, respectively,
-    of each audio_gen audio sample to all batch['audio'] samples
+    of each audio_gen audio sample to all batch samples
     """
 
     all_min_dists = []
@@ -233,16 +236,16 @@ def distances(batch, audio_gen, fft_sizes=(2048, 1024, 512, 256, 128, 64)):
 
     for size in fft_sizes:
         spec_op = partial(spectral_ops.compute_mag, size=size)
-        target_mag = spec_op(batch['audio'])
+        target_mag = spec_op(batch)
         value_mag = spec_op(audio_gen)
 
         value_dists_standard = [
-            tf.reduce_mean(tf.abs(target_mag - tf.stack([v] * tf.shape(target_mag)[0])), axis=(1, 2))
+            tf.reduce_mean(tf.abs(tf_float32(target_mag) - tf_float32(tf.stack([v] * tf.shape(target_mag)[0]))), axis=(1, 2))
             for v in tf.unstack(value_mag)
         ]
         value_dists_log = [
             tf.reduce_mean(
-                tf.abs(spectral_ops.safe_log(target_mag) - tf.stack([v] * tf.shape(target_mag)[0])),
+                tf.abs(tf_float32(spectral_ops.safe_log(target_mag)) - tf_float32(tf.stack([v] * tf.shape(target_mag)[0]))),
                 axis=(1, 2),
             )
             for v in tf.unstack(spectral_ops.safe_log(value_mag))
