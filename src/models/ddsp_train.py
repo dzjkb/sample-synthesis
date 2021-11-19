@@ -16,7 +16,6 @@ from ..evaluation.ddsp_eval import (
     sample,
     get_evaluator_classes,
     FadEvaluator,
-    STATS_DIR,
 )
 
 logger = get_logger(__name__, 'DEBUG')
