@@ -132,8 +132,8 @@ def main(
                     n_gen=10,
                     synth_params=synth_params_summary,
                     weights=weight_hists,
-                    # fad_evaluator=fad_evaluator,
-                    # trainset_distance=True,
+                    fad_evaluator=fad_evaluator,
+                    trainset_distance=True,
                 )
 
         trainer.save(save_dir)
