@@ -10,7 +10,7 @@ DATA_ROOT="./data"
 
 
 def main(
-    dataset,
+    dataset_name,
     sample_rate,
     example_secs,
     frame_rate,
@@ -18,8 +18,8 @@ def main(
 ):
     subprocess.run([
         "ddsp_prepare_tfrecord",
-        "--input_audio_filepatterns", f"{DATA_ROOT}/interim/{dataset}/*",
-        "--output_tfrecord_path", f"{DATA_ROOT}/processed/{dataset}.tfrecord",
+        "--input_audio_filepatterns", f"{DATA_ROOT}/interim/{dataset_name}/*",
+        "--output_tfrecord_path", f"{DATA_ROOT}/processed/{dataset_name}.tfrecord",
         "--sample_rate", f"{sample_rate}",
         "--coarse_chunk_secs", "20",
         "--example_secs", f"{example_secs}",

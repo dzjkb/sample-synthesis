@@ -17,6 +17,7 @@ from ..evaluation.ddsp_eval import (
     get_evaluator_classes,
     FadEvaluator,
 )
+from ..evaluation.fad import STATS_DIR
 
 logger = get_logger(__name__, 'DEBUG')
 
