@@ -165,7 +165,7 @@ def sample(
                 synth_audio_summary(sampled, step, sample_rate=sample_rate)
 
             if fad_evaluator:
-                fad_evaluator.evaluate(batch=None, sampled)
+                fad_evaluator.evaluate(None, sampled)
 
             if trainset_distance:
                 big_batch = tf.concat(
