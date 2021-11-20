@@ -164,8 +164,11 @@ def sample(
                 sp_summary(sampled, step)
                 synth_audio_summary(sampled, step, sample_rate=sample_rate)
 
+            sampled_audio_gen = sampled['audio_synth'].numpy()
+
+            return
             if fad_evaluator:
-                fad_evaluator.evaluate(None, sampled)
+                fad_evaluator.evaluate(None, sampled_audio_gen)
 
             if trainset_distance:
                 big_batch = tf.concat(
@@ -193,7 +196,8 @@ class FadEvaluator(evaluators.BaseEvaluator):
         self._fad_metric = FadMetric(sample_rate, frame_rate, base_stats=trainset_stats)
 
     def evaluate(self, batch, outputs, losses=None):
-        audio_gen = outputs['audio_synth'].numpy()
+        # audio_gen = outputs['audio_synth'].numpy()
+        audio_gen = outputs
         self._fad_metric.update_state(batch, audio_gen)
 
     def flush(self, step):
