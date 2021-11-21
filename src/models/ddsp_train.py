@@ -94,6 +94,7 @@ def main(
         learning_rate=lr,
         kl_weight=kl_weight,
         kl_min=kl_min,
+        steps_per_summary=steps_per_summary,
     )
 
     trainer.build(first_example)

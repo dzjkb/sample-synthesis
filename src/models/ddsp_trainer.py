@@ -47,6 +47,11 @@ class TrainerWeightDecay(trainers.Trainer):
 
 
 class TrainerGradSummaries(trainers.Trainer):
+    def __init__(self, *args, **kwargs):
+        self.steps_per_summary = kwargs.get('steps_per_summary')
+        del kwargs['steps_per_summary']
+        super().__init__(*args, **kwargs)
+
     @tf.function
     def step_fn(self, batch):
         """Per-Replica training step."""
@@ -57,7 +62,8 @@ class TrainerGradSummaries(trainers.Trainer):
         grads, _ = tf.clip_by_global_norm(grads, self.grad_clip_norm)
 
         # log gradient histograms for each variable
-        self._log_grads(grads, self.model.trainable_variables, self.step)
+        if self.steps_per_summary and (self.step + 1) % self.steps_per_summary == 0:
+            self._log_grads(grads, self.model.trainable_variables, self.step + 1)
 
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
         return losses
