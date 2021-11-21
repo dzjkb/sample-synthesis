@@ -118,8 +118,11 @@ def synth_audio_summary(outputs, step, sample_rate, synths=("harmonic", "noise")
 
 
 def log_grads(grads, vars, step):
-    for g, v in zip(grads, vars):
-        tf.summary.histogram(v.name, g, step=step)
+    grads_norm, grads_notnorm = grads
+    for g, v in zip(grads_norm, vars):
+        tf.summary.histogram(f"grads/{v.name}", g, step=step)
+    for g, v in zip(grads_notnorm, vars):
+        tf.summary.histogram(f"unnormalized_grads/{v.name}", g, step=step)
 
 
 def _rgetattr(obj, attr, *args):
