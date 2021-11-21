@@ -366,7 +366,6 @@ def get_trainer(
     kl_min=0,
     strategy=None,
     restore_checkpoint=None,
-    steps_per_summary=None,
     **trainer_kwargs
 ):
     if not strategy:
@@ -374,12 +373,7 @@ def get_trainer(
 
     with strategy.scope():
         model = get_model(model_name, time_steps, sample_rate, n_samples, kl_weight=kl_weight, kl_min=kl_min)
-        trainer = TrainerGradSummaries(
-            model,
-            strategy,
-            steps_per_summary=steps_per_summary,
-            **trainer_kwargs,
-        )
+        trainer = TrainerGradSummaries(model, strategy, **trainer_kwargs)
 
     return trainer
 
