@@ -16,6 +16,7 @@ from ..evaluation.ddsp_eval import (
     sample,
     get_evaluator_classes,
     FadEvaluator,
+    log_grads,
 )
 from ..evaluation.fad import STATS_DIR
 
@@ -115,7 +116,7 @@ def main(
         tf.summary.trace_export("graph_summary", step=1)
         for i in range(training_steps):
             step = trainer.step
-            losses = trainer.train_step(dataset_iter)
+            losses, grads = trainer.train_step(dataset_iter)
             res_str = 'step: {}\t'.format(step + 1)
             for k, v in losses.items():
                 res_str += '{}: {:.2f}\t'.format(k, v)
@@ -124,6 +125,7 @@ def main(
 
             if step != 0 and (step+1) % steps_per_summary == 0:
                 trainer.save(save_dir)
+                log_grads(grads, trainer.model.trainable_variables, step + 1)
                 sample(
                     trainer.model,
                     data_provider,

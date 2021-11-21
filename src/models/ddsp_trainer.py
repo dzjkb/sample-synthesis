@@ -47,28 +47,23 @@ class TrainerWeightDecay(trainers.Trainer):
 
 
 class TrainerGradSummaries(trainers.Trainer):
-    def __init__(self, *args, **kwargs):
-        self.steps_per_summary = kwargs.get('steps_per_summary')
-        del kwargs['steps_per_summary']
-        super().__init__(*args, **kwargs)
+    @tf.function
+    def train_step(self, inputs):
+        """Distributed training step."""
+        # Wrap iterator in tf.function, slight speedup passing in iter vs batch.
+        batch = next(inputs) if hasattr(inputs, '__next__') else inputs
+        losses, grads = self.run(self.step_fn, batch)
+        # Add up the scalar losses across replicas.
+        n_replicas = self.strategy.num_replicas_in_sync
+        return {k: self.psum(v, axis=None) / n_replicas for k, v in losses.items()}, grads
 
     @tf.function
     def step_fn(self, batch):
         """Per-Replica training step."""
         with tf.GradientTape() as tape:
             _, losses = self.model(batch, return_losses=True, training=True)
-
+        # Clip and apply gradients.
         grads = tape.gradient(losses['total_loss'], self.model.trainable_variables)
         grads, _ = tf.clip_by_global_norm(grads, self.grad_clip_norm)
-
-        # log gradient histograms for each variable
-        if self.steps_per_summary and (self.step + 1) % self.steps_per_summary == 0:
-            self._log_grads(grads, self.model.trainable_variables, self.step + 1)
-
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
-        return losses
-
-    @staticmethod
-    def _log_grads(grads, vars, step):
-        for g, v in zip(grads, vars):
-            tf.summary.histogram(v.name, g, step=step)
+        return losses, grads

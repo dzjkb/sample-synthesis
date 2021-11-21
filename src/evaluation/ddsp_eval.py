@@ -117,6 +117,11 @@ def synth_audio_summary(outputs, step, sample_rate, synths=("harmonic", "noise")
         summaries.audio_summary(audio, step, sample_rate=sample_rate, name=f"{key} synth - audio")
 
 
+def log_grads(grads, vars, step):
+    for g, v in zip(grads, vars):
+        tf.summary.histogram(v.name, g, step=step)
+
+
 def _rgetattr(obj, attr, *args):
     def _getattr(obj, attr):
         return getattr(obj, attr, *args)
