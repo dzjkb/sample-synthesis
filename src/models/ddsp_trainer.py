@@ -44,3 +44,25 @@ class TrainerWeightDecay(trainers.Trainer):
                 weight_decay=lambda: None,
             )
             self.optimizer.weight_decay = lambda: wd_schedule(self.optimizer.iterations)
+
+
+class TrainerGradSummaries(trainers.Trainer):
+    @tf.function
+    def step_fn(self, batch):
+        """Per-Replica training step."""
+        with tf.GradientTape() as tape:
+            _, losses = self.model(batch, return_losses=True, training=True)
+
+        grads = tape.gradient(losses['total_loss'], self.model.trainable_variables)
+        grads, _ = tf.clip_by_global_norm(grads, self.grad_clip_norm)
+
+        # log gradient histograms for each variable
+        self._log_grads(grads, self.model.trainable_variables, self.step)
+
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+        return losses
+
+    @staticmethod
+    def _log_grads(grads, vars, step):
+        for g, v in zip(grads, vars):
+            tf.summary.histogram(v.name, g, step=step)

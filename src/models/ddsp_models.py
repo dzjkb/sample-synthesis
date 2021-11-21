@@ -13,6 +13,7 @@ from .model_utils import strat
 from .ddsp_vae import VAE, IAF, IAFPrior, GaussPosterior, GaussPrior
 from .ddsp_losses import KLRegularizer
 from .ddsp_encoders import MfccRegularizedRnnEncoder
+from .ddsp_trainer import TrainerGradSummaries
 
 RNN_REGULARIZERS = dict(
     kernel_regularizer=tfkreg.L2(l2=0.001),
@@ -372,7 +373,7 @@ def get_trainer(
 
     with strategy.scope():
         model = get_model(model_name, time_steps, sample_rate, n_samples, kl_weight=kl_weight, kl_min=kl_min)
-        trainer = trainers.Trainer(model, strategy, **trainer_kwargs)
+        trainer = TrainerGradSummaries(model, strategy, **trainer_kwargs)
 
     return trainer
 
