@@ -104,7 +104,7 @@ def main(
         load_model(trainer, checkpoint_dir)
 
     summary_writer = tf.summary.create_file_writer(save_dir)
-    # evaluator_classes = get_evaluator_classes(dataset)
+    evaluator_classes = get_evaluator_classes(dataset)
     fad_evaluator = FadEvaluator(
         sample_rate,
         frame_rate,
@@ -140,11 +140,11 @@ def main(
 
         trainer.save(save_dir)
 
-    # evaluate(
-    #     data_provider,
-    #     trainer.model,
-    #     evaluator_classes=evaluator_classes,
-    # )
+    evaluate(
+        data_provider,
+        trainer.model,
+        evaluator_classes=evaluator_classes,
+    )
 
 
 if __name__ == '__main__':

@@ -194,7 +194,6 @@ def sample(
 def get_evaluator_classes(dataset):
     return [
         evaluators.F0LdEvaluator,
-        # partial(FadEvaluator, trainset_stats=f"{STATS_DIR}/{dataset}"),
     ]
 
 
