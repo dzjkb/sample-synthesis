@@ -25,6 +25,13 @@ from .fad import (
 # from ..data.dataset import get_provider
 # from ..data.paths import GENERATED
 # from .utils import save_wav
+from .ndb import (
+    get_center_samples,
+    get_closest_center,
+    map_logmag,
+    assign_samples_to_bins,
+    get_cluster_counts,
+)
 
 
 def sp_summary(outputs, step):
@@ -141,7 +148,7 @@ def sample(
     synth_params=False,
     fad_evaluator=None,
     weights=None,
-    trainset_distance=None,
+    ndb_eval=None,
 ):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
     ds_iter = iter(random_batch_ds)
@@ -174,21 +181,23 @@ def sample(
 
             sampled_audio_gen = sampled['audio_synth'].numpy()
 
-            return
             if fad_evaluator:
                 fad_evaluator.evaluate(None, sampled_audio_gen)
+                fad_evaluator.flush(step)
 
-            if trainset_distance:
-                big_batch = tf.concat(
-                    list(map(lambda d: d['audio'], islice(ds_iter, n_gen * 10))),
-                    axis=0,
-                )
-                min_dist, avg_dist = distances(big_batch, sampled_gen)
+            if ndb_eval:
+                # big_batch = tf.concat(
+                #     list(map(lambda d: d['audio'], islice(ds_iter, n_gen * 10))),
+                #     axis=0,
+                # )
+                # min_dist, avg_dist = distances(big_batch, sampled_gen)
 
-                for i, dist in enumerate(min_dist):
-                    tf.summary.scalar(f"min_distance/sample_{i}", dist, step=step)
-                for i, dist in enumerate(avg_dist):
-                    tf.summary.scalar(f"avg_distance/sample_{i}", dist, step=step)
+                # for i, dist in enumerate(min_dist):
+                #     tf.summary.scalar(f"min_distance/sample_{i}", dist, step=step)
+                # for i, dist in enumerate(avg_dist):
+                #     tf.summary.scalar(f"avg_distance/sample_{i}", dist, step=step)
+                ndb_eval.evaluate(None, sampled_audio_gen)
+                ndb_eval.flush(step)
 
 
 def get_evaluator_classes(dataset):
@@ -235,83 +244,71 @@ class FadMetric(metrics.BaseMetrics):
         self._metrics['fad'].update_state(fad)
 
 
-def distances(batch, audio_gen, fft_sizes=(2048, 1024, 512, 256, 128, 64)):
-    """
-    for (N, n_samples) batch and (M, n_samples) audio_gen tensors returns
-    two tensors of shape (M,) indicating the minimum and average distance, respectively,
-    of each audio_gen audio sample to all batch samples
-    """
+class NDBEvaluator(evaluators.BaseEvaluator):
+    def __init__(self, sample_rate, frame_rate, train_ds, k=50):
+        super().__init__(sample_rate, frame_rate)
+        logds = map_logmag(train_ds)
+        self.k = k
+        self.center_samples = get_center_samples(logds, k=k)
+        sample_to_bin = assign_samples_to_bins(logds, self.center_samples)
+        self.trainset_cluster_counts = get_cluster_counts(sample_to_bin, k=k)
+        self.ds_size = len(sample_to_bin)
 
-    all_min_dists = []
-    all_avg_dists = []
+    def evaluate(self, batch, outputs, losses=None):
+        logsamples = map_logmag(outputs)
+        sample_to_bin = assign_samples_to_bins(logsamples, self.center_samples)
+        self.batch_cluster_counts = get_cluster_counts(sample_to_bin, k=self.k)
+        self.batch_size = len(sample_to_bin)
 
-    for size in fft_sizes:
-        spec_op = partial(spectral_ops.compute_mag, size=size)
-        target_mag = spec_op(batch)
-        value_mag = spec_op(audio_gen)
+    def flush(self, step):
+        self._proportions_fig_summary()
+        self._ndb_scalar_summary()
 
-        value_dists_standard = [
-            tf.reduce_mean(tf.abs(tf_float32(target_mag) - tf_float32(tf.stack([v] * tf.shape(target_mag)[0]))), axis=(1, 2))
-            for v in tf.unstack(value_mag)
-        ]
-        value_dists_log = [
-            tf.reduce_mean(
-                tf.abs(tf_float32(spectral_ops.safe_log(target_mag)) - tf_float32(tf.stack([v] * tf.shape(target_mag)[0]))),
-                axis=(1, 2),
-            )
-            for v in tf.unstack(spectral_ops.safe_log(value_mag))
-        ]
-        value_dists = [standard + log for standard, log in zip(value_dists_standard, value_dists_log)]
+    def _proportions_fig_summary(self):
+        # 1. calculate proportions for each cluster
+        # 2. create fig summary with sampled/trainset proportions overlaid
+        pass
 
-        min_dists = tf.stack([tf.reduce_min(d) for d in value_dists])
-        avg_dists = tf.stack([tf.reduce_mean(d) for d in value_dists])
-        all_min_dists.append(min_dists)
-        all_avg_dists.append(avg_dists)
-
-    min_dist = tf.reduce_mean(tf.stack(all_min_dists), axis=1)
-    avg_dist = tf.reduce_mean(tf.stack(all_avg_dists), axis=1)
-
-    return min_dist, avg_dist
+    def _ndb_scalar_summary(self):
+        # 3. calculate number of significantly different bins
+        # 4. scalar summary
+        pass
 
 
-# def main(
-#     run_name: str,
-#     eval_checkpoint: str,
-#     dataset: str,
-#     # architecture: str,
-#     example_secs: int,
-#     sample_rate: int,
-#     frame_rate: int,
-#     **kwargs,
-# ):
-#     data_provider = get_provider(
-#         dataset,
-#         example_secs,
-#         sample_rate,
-#         frame_rate,
-#     )
+# def distances(batch, audio_gen, fft_sizes=(2048, 1024, 512, 256, 128, 64)):
+#     """
+#     for (N, n_samples) batch and (M, n_samples) audio_gen tensors returns
+#     two tensors of shape (M,) indicating the minimum and average distance, respectively,
+#     of each audio_gen audio sample to all batch samples
+#     """
 
-#     trainer = get_trainer(
-#         time_steps=frame_rate * example_secs,
-#         sample_rate=sample_rate,
-#         n_samples=sample_rate * example_secs,
-#         restore_checkpoint=eval_checkpoint,
-#     )
+#     all_min_dists = []
+#     all_avg_dists = []
 
-#     sample(
-#         trainer.model,
-#         data_provider,
-#         sample_rate=sample_rate,
-#         checkpoint=eval_checkpoint,
-#     )
+#     for size in fft_sizes:
+#         spec_op = partial(spectral_ops.compute_mag, size=size)
+#         target_mag = spec_op(batch)
+#         value_mag = spec_op(audio_gen)
 
+#         value_dists_standard = [
+#             tf.reduce_mean(tf.abs(tf_float32(target_mag) - tf_float32(tf.stack([v] * tf.shape(target_mag)[0]))), axis=(1, 2))
+#             for v in tf.unstack(value_mag)
+#         ]
+#         value_dists_log = [
+#             tf.reduce_mean(
+#                 tf.abs(tf_float32(spectral_ops.safe_log(target_mag)) - tf_float32(tf.stack([v] * tf.shape(target_mag)[0]))),
+#                 axis=(1, 2),
+#             )
+#             for v in tf.unstack(spectral_ops.safe_log(value_mag))
+#         ]
+#         value_dists = [standard + log for standard, log in zip(value_dists_standard, value_dists_log)]
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--cfg", "-c", type=str)
-#     args = parser.parse_args()
+#         min_dists = tf.stack([tf.reduce_min(d) for d in value_dists])
+#         avg_dists = tf.stack([tf.reduce_mean(d) for d in value_dists])
+#         all_min_dists.append(min_dists)
+#         all_avg_dists.append(avg_dists)
 
-#     with open(args.cfg) as cfg_f:
-#         cfg = yaml.load(cfg_f, Loader=yaml.FullLoader)
+#     min_dist = tf.reduce_mean(tf.stack(all_min_dists), axis=1)
+#     avg_dist = tf.reduce_mean(tf.stack(all_avg_dists), axis=1)
 
-#     main(**cfg)
+#     return min_dist, avg_dist
