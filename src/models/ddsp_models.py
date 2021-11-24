@@ -38,19 +38,19 @@ def get_ddsp_model(time_steps, sample_rate, n_samples, kl_weight=None, kl_min=No
     encoder = encoders.MfccTimeDistributedRnnEncoder(
         rnn_channels=512,
         rnn_type='gru',
-        z_dims=32,
-        z_time_steps=time_steps,
+        z_dims=16,
+        z_time_steps=125,
         input_keys = ('audio',),
     )
 
-    decoder = decoders.RnnFcDecoder(rnn_channels = 256,
+    decoder = decoders.RnnFcDecoder(rnn_channels = 512,
                                     rnn_type = 'gru',
-                                    ch = 256,
+                                    ch = 512,
                                     layers_per_stack = 1,
                                     input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (('amps', 1),
-                                                     ('harmonic_distribution', 45),
-                                                     ('noise_magnitudes', 45)))
+                                                     ('harmonic_distribution', 100),
+                                                     ('noise_magnitudes', 65)))
 
     # Create Processors.
     harmonic = ddsp.synths.Harmonic(n_samples=n_samples, 
@@ -106,14 +106,14 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
         mean_aggregate=True,
         **RNN_REGULARIZERS,
     )
-    decoder = decoders.RnnFcDecoder(rnn_channels = 256,
+    decoder = decoders.RnnFcDecoder(rnn_channels = 512,
                                     rnn_type = 'gru',
-                                    ch = 256,
+                                    ch = 512,
                                     layers_per_stack = 1,
                                     input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (('amps', 1),
-                                                     ('harmonic_distribution', 45),
-                                                     ('noise_magnitudes', 45)))
+                                                     ('harmonic_distribution', 100),
+                                                     ('noise_magnitudes', 65)))
 
     # Create latent distributions
     distribution_args = {
@@ -173,7 +173,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
 
 def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # parameters
-    z_dims = 256
+    z_dims = 64
 
     # Create Neural Networks.
 
@@ -186,14 +186,14 @@ def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
         mean_aggregate=True,
         **RNN_REGULARIZERS,
     )
-    decoder = decoders.RnnFcDecoder(rnn_channels = 256,
+    decoder = decoders.RnnFcDecoder(rnn_channels = 512,
                                     rnn_type = 'gru',
-                                    ch = 256,
+                                    ch = 512,
                                     layers_per_stack = 1,
                                     input_keys = ('ld_scaled', 'z', 'f0_scaled'),
                                     output_splits = (('amps', 1),
-                                                     ('harmonic_distribution', 45),
-                                                     ('noise_magnitudes', 45)))
+                                                     ('harmonic_distribution', 100),
+                                                     ('noise_magnitudes', 65)))
 
     # Create latent distributions
     distribution_args = {
