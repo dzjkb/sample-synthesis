@@ -17,6 +17,7 @@ from ..evaluation.ddsp_eval import (
     get_evaluator_classes,
     FadEvaluator,
     log_grads,
+    NDBEvaluator,
 )
 from ..evaluation.fad import STATS_DIR
 
@@ -110,6 +111,11 @@ def main(
         frame_rate,
         f"{STATS_DIR}/{dataset_name}",
     )
+    ndb_evaluator = NDBEvaluator(
+        sample_rate,
+        frame_rate,
+        data_provider.get_dataset(),
+    )
 
     with summary_writer.as_default():
         tf.summary.trace_export("graph_summary", step=1)
@@ -135,7 +141,7 @@ def main(
                     synth_params=synth_params_summary,
                     weights=weight_hists,
                     fad_evaluator=fad_evaluator,
-                    trainset_distance=True,
+                    ndb_eval=ndb_evaluator,
                 )
 
         trainer.save(save_dir)

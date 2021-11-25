@@ -14,6 +14,8 @@ from ddsp.training import (
 )
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 import tensorflow as tf
 
 # from ..models.ddsp_models import get_trainer
@@ -31,6 +33,7 @@ from .ndb import (
     map_logmag,
     assign_samples_to_bins,
     get_cluster_counts,
+    two_sample_test,
 )
 
 
@@ -245,34 +248,55 @@ class FadMetric(metrics.BaseMetrics):
 
 
 class NDBEvaluator(evaluators.BaseEvaluator):
-    def __init__(self, sample_rate, frame_rate, train_ds, k=50):
+    def __init__(self, sample_rate, frame_rate, train_ds, k=50, significance_level=0.05):
         super().__init__(sample_rate, frame_rate)
         logds = map_logmag(train_ds)
         self.k = k
+        self.pval = significance_level
         self.center_samples = get_center_samples(logds, k=k)
         sample_to_bin = assign_samples_to_bins(logds, self.center_samples)
         self.trainset_cluster_counts = get_cluster_counts(sample_to_bin, k=k)
         self.ds_size = len(sample_to_bin)
+        self.trainset_proportions = {c: v/self.ds_size for c, v in self.trainset_cluster_counts}
 
     def evaluate(self, batch, outputs, losses=None):
         logsamples = map_logmag(outputs)
         sample_to_bin = assign_samples_to_bins(logsamples, self.center_samples)
         self.batch_cluster_counts = get_cluster_counts(sample_to_bin, k=self.k)
         self.batch_size = len(sample_to_bin)
+        self.batch_proportions = {c: v/self.batch_size for c, v in self.batch_cluster_counts}
 
     def flush(self, step):
-        self._proportions_fig_summary()
-        self._ndb_scalar_summary()
+        self._proportions_fig_summary(step)
+        self._ndb_scalar_summary(step)
 
-    def _proportions_fig_summary(self):
-        # 1. calculate proportions for each cluster
-        # 2. create fig summary with sampled/trainset proportions overlaid
-        pass
+    def _proportions_fig_summary(self, step):
+        fig, ax = plt.subplots(1, 1)
+        longform_trainset = pd.DataFrame({
+            "bin": list(self.trainset_proportions.keys()),
+            "count": list(self.trainset_proportions.values()),
+            "data": f"training set ({self.ds_size} samples)",
+        })
+        longform_batch = pd.DataFrame({
+            "bin": list(self.batch_proportions.keys()),
+            "count": list(self.batch_proportions.values()),
+            "data": f"sampled batch ({self.batch_size} samples)",
+        })
+        longform_data = pd.concat((longform_trainset, longform_batch), axis=0).reset_index(drop=True)
+        sns.barplot(data=longform_data, x="bin", y="count", hue="data", ax=ax)
 
-    def _ndb_scalar_summary(self):
-        # 3. calculate number of significantly different bins
-        # 4. scalar summary
-        pass
+        summaries.fig_summary("NDB bin proportions", fig, step)
+
+    def _ndb_scalar_summary(self, step):
+        bin_to_pval = {c: two_sample_test(
+            self.trainset_cluster_counts[c],
+            self.batch_cluster_counts[c],
+            self.ds_size,
+            self.batch_size,
+        ) for c in self.trainset_cluster_counts}
+
+        ndb = sum([pval < self.pval for pval in bin_to_pval.values()])
+        tf.summary.scalar("ndb", ndb, step=step)
 
 
 # def distances(batch, audio_gen, fft_sizes=(2048, 1024, 512, 256, 128, 64)):

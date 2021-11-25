@@ -4,6 +4,7 @@ from math import sqrt
 
 import tensorflow as tf
 import numpy as np
+from scipy.stats import norm
 from ddsp import spectral_ops
 from sklearn.cluster import KMeans
 
@@ -117,6 +118,5 @@ def two_sample_test(c1, c2, n1, n2):
     p2 = c2/n2
     z = (p1 - p2) / se
 
-    # wait is this already the p-value?
-    # damn stats man
-    return z
+    pval = 2 * (1 - norm.cdf(np.abs(z)))
+    return pval
