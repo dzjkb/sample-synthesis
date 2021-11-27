@@ -173,7 +173,7 @@ def get_iaf_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
 
 def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
     # parameters
-    z_dims = 64
+    z_dims = 128
 
     # Create Neural Networks.
 
@@ -190,7 +190,8 @@ def get_gauss_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
                                     rnn_type = 'gru',
                                     ch = 512,
                                     layers_per_stack = 1,
-                                    input_keys = ('ld_scaled', 'z', 'f0_scaled'),
+                                    # input_keys = ('ld_scaled', 'z', 'f0_scaled'),
+                                    input_keys = ('ld_scaled', 'z'),
                                     output_splits = (('amps', 1),
                                                      ('harmonic_distribution', 100),
                                                      ('noise_magnitudes', 65)))

@@ -140,17 +140,17 @@ def main(
                     n_gen=10,
                     synth_params=synth_params_summary,
                     weights=weight_hists,
-                    fad_evaluator=fad_evaluator,
+                    # fad_evaluator=fad_evaluator,
                     ndb_eval=ndb_evaluator,
                 )
 
         trainer.save(save_dir)
 
-    evaluate(
-        data_provider,
-        trainer.model,
-        evaluator_classes=evaluator_classes,
-    )
+    # evaluate(
+    #     data_provider,
+    #     trainer.model,
+    #     evaluator_classes=evaluator_classes,
+    # )
 
 
 if __name__ == '__main__':
