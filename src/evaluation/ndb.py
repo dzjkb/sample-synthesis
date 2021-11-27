@@ -34,9 +34,9 @@ def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.3):
     keepdims = np.random.choice(n_dims, size=int(n_dims * dims_fraction))
 
     ds = ds.enumerate()
-    ds = ds.filter(lambda _: np.random.random < samples_fraction)
-    ds = ds.map(lambda ex: (ex[0], tf.reshape(ex[1], [-1])))
-    return np.stack([ex[0] for ex in iter(ds)]), np.stack([ex[1][keepdims] for ex in iter(ds)])
+    ds = ds.filter(lambda idx, ex: np.random.random < samples_fraction)
+    ds = ds.map(lambda idx, ex: (idx, tf.reshape(ex, [-1])))
+    return np.stack([idx for idx, _ in iter(ds)]), np.stack([ex[keepdims] for _, ex in iter(ds)])
 
 
 def map_logmag(ds, fft_size=2048):
