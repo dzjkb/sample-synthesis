@@ -23,7 +23,7 @@ def l2_distance(s1, s2):
     return tf.reduce_sum(tf.square(s1 - s2))
 
 
-def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.3):
+def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.2):
     """
     note that `ds` should not be batched
     """
@@ -34,9 +34,9 @@ def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.3):
     keepdims = np.random.choice(n_dims, size=int(n_dims * dims_fraction))
 
     ds = ds.enumerate()
-    ds = ds.filter(lambda idx, ex: np.random.random < samples_fraction)
+    ds = ds.filter(lambda idx, ex: np.random.random() < samples_fraction)
     ds = ds.map(lambda idx, ex: (idx, tf.reshape(ex, [-1])))
-    return np.stack([idx for idx, _ in iter(ds)]), np.stack([ex[keepdims] for _, ex in iter(ds)])
+    return np.stack([idx for idx, _ in iter(ds)]), np.stack([ex.numpy()[keepdims] for _, ex in iter(ds)])
 
 
 def map_logmag(ds, fft_size=2048):
