@@ -28,8 +28,9 @@ def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.3):
     note that `ds` should not be batched
     """
 
-    n_dims = np.prod(next(iter(ds)).shape)
-    assert n_dims == 2  # log magnitude spectrograms
+    ex_shape = next(iter(ds)).shape
+    assert len(ex_shape) == 2  # log magnitude spectrograms
+    n_dims = np.prod(ex_shape)
     keepdims = np.random.choice(n_dims, size=int(n_dims * dims_fraction))
 
     ds = ds.enumerate()
