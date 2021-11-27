@@ -79,7 +79,7 @@ def get_center_samples(ds, k=50):
 
 
 def get_closest_center(sample, center_samples):
-    distances = np.array([l2_distance(sample, center) for center_samples])
+    distances = np.array([l2_distance(sample, center) for center in center_samples])
     return np.argmin(distances)
 
 
