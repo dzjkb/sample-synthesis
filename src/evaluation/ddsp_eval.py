@@ -20,6 +20,7 @@ import tensorflow as tf
 
 # from ..models.ddsp_models import get_trainer
 from ..models.model_utils import strat
+from .logger import get_logger
 from .fad import (
     get_fad_embeddings,
     get_fad_distance,
@@ -35,6 +36,8 @@ from .ndb import (
     get_cluster_counts,
     two_sample_test,
 )
+
+logger = get_logger(__name__, 'DEBUG')
 
 
 def sp_summary(outputs, step):
@@ -147,34 +150,50 @@ def sample(
     sample_rate,
     checkpoint_dir,
     step,
-    n_gen=10,
+    n_gen=20,
     synth_params=False,
     fad_evaluator=None,
     weights=None,
     ndb_eval=None,
+    other_evals=None,
 ):
     random_batch_ds = data_provider.get_batch(n_gen, shuffle=True)
     ds_iter = iter(random_batch_ds)
     batch = next(ds_iter)
 
+    logger.debug(f"eval: starting eval of step {step}")
     with strat().scope():
         outputs = model(batch, training=False)
 
         audio = batch['audio'].numpy()
         audio_gen = model.get_audio_from_outputs(outputs).numpy()
 
+        logger.debug("eval: writing reconstruction audio summaries")
         summaries.audio_summary(audio, step, sample_rate=sample_rate, name="audio original")
         summaries.audio_summary(audio_gen, step, sample_rate=sample_rate, name="audio generated")
         summaries.waveform_summary(audio, audio_gen, step, name="waveforms")
         if synth_params:
+            logger.debug("eval: writing synth params summaries")
             sp_summary(outputs, step)
             synth_audio_summary(outputs, step, sample_rate=sample_rate)
 
         if weights:
+            logger.debug("eval: writing weight histograms")
             for w in weights:
                 tf.summary.histogram(f"weights/{w}", _rgetattr(model, w), step=step)
 
+        if other_evals:
+            logger.debug("eval: writing other evaluations")
+            for b in islice(ds_iter, n_gen * 20):
+                b_out, losses = model(b, return_losses=True, training=False)
+                for e in other_evals:
+                    e.evaluate(b, b_out, losses)
+
+            for e in other_evals:
+                e.flush(step)
+
         if hasattr(model, "sample"):
+            logger.debug("eval: sampling from the model")
             sampled = model.sample(batch)
             sampled_gen = model.get_audio_from_outputs(sampled).numpy()
             summaries.audio_summary(sampled_gen, step, sample_rate=sample_rate, name="audio sampled")
@@ -185,10 +204,12 @@ def sample(
             sampled_audio_gen = sampled['audio_synth'].numpy()
 
             if fad_evaluator:
+                logger.debug("eval: calculating FAD")
                 fad_evaluator.evaluate(None, sampled_audio_gen)
                 fad_evaluator.flush(step)
 
             if ndb_eval:
+                logger.debug("eval: calculating NDB")
                 # big_batch = tf.concat(
                 #     list(map(lambda d: d['audio'], islice(ds_iter, n_gen * 10))),
                 #     axis=0,
@@ -203,7 +224,7 @@ def sample(
                 ndb_eval.flush(step)
 
 
-def get_evaluator_classes(dataset):
+def get_evaluator_classes():
     return [
         evaluators.F0LdEvaluator,
     ]

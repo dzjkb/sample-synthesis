@@ -105,7 +105,6 @@ def main(
         load_model(trainer, checkpoint_dir)
 
     summary_writer = tf.summary.create_file_writer(save_dir)
-    evaluator_classes = get_evaluator_classes(dataset)
     fad_evaluator = FadEvaluator(
         sample_rate,
         frame_rate,
@@ -116,6 +115,10 @@ def main(
         frame_rate,
         data_provider.get_dataset(),
     )
+    other_evaluators = [
+        eval_class(sample_rate, frame_rate)
+        for eval_class in get_evaluator_classes()
+    ]
 
     with summary_writer.as_default():
         tf.summary.trace_export("graph_summary", step=1)
@@ -142,15 +145,10 @@ def main(
                     weights=weight_hists,
                     # fad_evaluator=fad_evaluator,
                     ndb_eval=ndb_evaluator,
+                    other_evals=other_evaluators,
                 )
 
         trainer.save(save_dir)
-
-    # evaluate(
-    #     data_provider,
-    #     trainer.model,
-    #     evaluator_classes=evaluator_classes,
-    # )
 
 
 if __name__ == '__main__':
