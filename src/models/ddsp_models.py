@@ -273,8 +273,7 @@ def get_snares_vae(time_steps, sample_rate, n_samples, kl_weight, kl_min):
                                     rnn_type = 'gru',
                                     ch = 256,
                                     layers_per_stack = 1,
-                                    input_keys = ('z', 'f0_scaled'),
-                                    # input_keys = ('ld_scaled', 'z', 'f0_scaled'),
+                                    input_keys = ('z',),
                                     output_splits = (
                                         ('amps', 1),
                                         ('sin_amps', 32),
