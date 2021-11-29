@@ -61,7 +61,7 @@ def get_voronoi_centers(ds, k=50):
     centers = k_means.cluster_centers_
 
     # retrieve original center sample indices
-    is_center_mask = [np.allclose(subsampled_ds, c) for c in centers]
+    is_center_mask = [(subsampled_ds == c).all(axis=1) for c in centers]
     center_indices = [tf.gather(original_labels, indices=tf.squeeze(tf.where(mask))) for mask in is_center_mask]
     return center_indices
 
