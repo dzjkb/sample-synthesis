@@ -36,7 +36,9 @@ def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.2):
     ds = ds.enumerate()
     ds = ds.filter(lambda idx, ex: np.random.random() < samples_fraction)
     ds = ds.map(lambda idx, ex: (idx, tf.reshape(ex, [-1])))
-    return np.stack([idx for idx, _ in iter(ds)]), np.stack([ex.numpy()[keepdims] for _, ex in iter(ds)])
+    subsampled_ds = np.stack([ex.numpy()[keepdims] for _, ex in iter(ds)])
+    labels = np.stack([idx for idx, _ in iter(ds)])
+    return labels, subsampled_ds
 
 
 def map_logmag(ds, fft_size=2048):
@@ -59,11 +61,9 @@ def get_voronoi_centers(ds, k=50):
     centers = k_means.cluster_centers_
 
     # retrieve original center sample indices
-    is_center_mask = [subsampled_ds == c for c in centers]
+    is_center_mask = [np.allclose(subsampled_ds, c) for c in centers]
     center_indices = [original_labels[mask] for mask in is_center_mask]
-
-    assert len(center_indices.shape) == 1
-    return center_indices.tolist()
+    return center_indices
 
 
 def get_center_samples(ds, k=50):
@@ -72,8 +72,8 @@ def get_center_samples(ds, k=50):
     center_samples = list(
         ds
         .enumerate()
-        .filter(lambda ex: ex[0] in cluster_centers)
-        .map(lambda ex: ex[1])
+        .filter(lambda idx, ex: idx in cluster_centers)
+        .map(lambda idx, ex: ex)
     )
 
     return center_samples
