@@ -20,7 +20,7 @@ import tensorflow as tf
 
 # from ..models.ddsp_models import get_trainer
 from ..models.model_utils import strat
-from .logger import get_logger
+from ..models.logger import get_logger
 from .fad import (
     get_fad_embeddings,
     get_fad_distance,
