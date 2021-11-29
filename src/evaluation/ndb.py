@@ -72,7 +72,7 @@ def get_center_samples(ds, k=50):
     center_samples = list(
         ds
         .enumerate()
-        .filter(lambda idx, ex: idx in cluster_centers)
+        .filter(lambda idx, ex: tf.reduce_any(tf.equal(idx, tf.convert_to_tensor(cluster_centers))))
         .map(lambda idx, ex: ex)
     )
 
