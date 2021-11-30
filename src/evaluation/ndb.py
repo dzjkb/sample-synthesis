@@ -34,7 +34,7 @@ def flatten_subsample_tf_dataset(ds, samples_fraction=0.5, dims_fraction=0.2):
     keepdims = np.random.choice(n_dims, size=int(n_dims * dims_fraction))
 
     ds = ds.enumerate()
-    ds = ds.filter(lambda idx, ex: np.random.random() < samples_fraction)
+    ds = ds.filter(lambda idx, ex: tf.random.uniform(()) < tf.constant(samples_fraction))
     ds = ds.map(lambda idx, ex: (idx, tf.reshape(ex, [-1])))
     subsampled_ds = np.stack([ex.numpy()[keepdims] for _, ex in iter(ds)])
     labels = np.stack([idx for idx, _ in iter(ds)])
@@ -62,7 +62,7 @@ def get_voronoi_centers(ds, k=50):
 
     # retrieve original center sample indices
     is_center_mask = [np.isclose(subsampled_ds, c).all(axis=1) for c in centers]
-    assert all([mask.sum() == 1] for mask in is_center_mask), "k-means has not converged!"
+    assert all([mask.sum() == 1] for mask in is_center_mask)
 
     center_indices = [tf.gather(original_labels, indices=tf.squeeze(tf.where(mask))) for mask in is_center_mask]
     return center_indices
@@ -95,7 +95,7 @@ def assign_samples_to_bins(ds, center_samples):
 
 def get_cluster_counts(cluster_assignment, k):
     cluster_counts = {i: 0 for i in range(k)}
-    for c, count in zip(np.unique(cluster_assignment, return_counts=True)):
+    for c, count in zip(*np.unique(cluster_assignment, return_counts=True)):
         cluster_counts[c] = count
 
     return cluster_counts
