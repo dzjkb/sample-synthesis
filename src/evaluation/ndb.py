@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 from scipy.stats import norm
 from ddsp import spectral_ops
-from sklearn.cluster import KMeans
+from sklearn_extra.cluster import KMedoids
 
 from ..data.fs_utils import git_root
 
@@ -57,11 +57,13 @@ def map_logmag(ds, fft_size=2048):
 
 def get_voronoi_centers(ds, k=50):
     original_labels, subsampled_ds = flatten_subsample_tf_dataset(ds)
-    k_means = KMeans(n_clusters=k).fit(subsampled_ds)
+    k_means = KMedoids(n_clusters=k, max_iter=1000).fit(subsampled_ds)
     centers = k_means.cluster_centers_
 
     # retrieve original center sample indices
-    is_center_mask = [(subsampled_ds == c).all(axis=1) for c in centers]
+    is_center_mask = [np.isclose(subsampled_ds, c).all(axis=1) for c in centers]
+    assert all([mask.sum() == 1] for mask in is_center_mask), "k-means has not converged!"
+
     center_indices = [tf.gather(original_labels, indices=tf.squeeze(tf.where(mask))) for mask in is_center_mask]
     return center_indices
 
@@ -80,8 +82,8 @@ def get_center_samples(ds, k=50):
 
 
 def get_closest_center(sample, center_samples):
-    distances = np.array([l2_distance(sample, center) for center in center_samples])
-    return np.argmin(distances)
+    distances = [l2_distance(sample, center) for center in center_samples]
+    return tf.argmin(distances)
 
 
 def assign_samples_to_bins(ds, center_samples):

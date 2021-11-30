@@ -7,6 +7,7 @@ pandas
 jupyterlab
 librosa
 sklearn
+scikit-learn-extra
 tqdm
 six==1.15
 gpustat
