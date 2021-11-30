@@ -186,6 +186,7 @@ def sample(
             logger.debug("eval: writing other evaluations")
             for b in islice(ds_iter, n_gen * 20):
                 b_out, losses = model(b, return_losses=True, training=False)
+                b_out['audio_gen'] = b_out['audio_synth']
                 for e in other_evals:
                     e.evaluate(b, b_out, losses)
 
@@ -201,7 +202,7 @@ def sample(
                 sp_summary(sampled, step)
                 synth_audio_summary(sampled, step, sample_rate=sample_rate)
 
-            sampled_audio_gen = sampled['audio_synth'].numpy()
+            sampled_audio_gen = sampled['audio_synth']
 
             if fad_evaluator:
                 logger.debug("eval: calculating FAD")
@@ -278,14 +279,14 @@ class NDBEvaluator(evaluators.BaseEvaluator):
         sample_to_bin = assign_samples_to_bins(logds, self.center_samples)
         self.trainset_cluster_counts = get_cluster_counts(sample_to_bin, k=k)
         self.ds_size = len(sample_to_bin)
-        self.trainset_proportions = {c: v/self.ds_size for c, v in self.trainset_cluster_counts}
+        self.trainset_proportions = {c: v/self.ds_size for c, v in self.trainset_cluster_counts.items()}
 
     def evaluate(self, batch, outputs, losses=None):
         logsamples = map_logmag(outputs)
         sample_to_bin = assign_samples_to_bins(logsamples, self.center_samples)
         self.batch_cluster_counts = get_cluster_counts(sample_to_bin, k=self.k)
         self.batch_size = len(sample_to_bin)
-        self.batch_proportions = {c: v/self.batch_size for c, v in self.batch_cluster_counts}
+        self.batch_proportions = {c: v/self.batch_size for c, v in self.batch_cluster_counts.items()}
 
     def flush(self, step):
         self._proportions_fig_summary(step)
