@@ -116,7 +116,7 @@ def two_sample_test(c1, c2, n1, n2):
     """
 
     p = (c1 + c2) / (n1 + n2)
-    se = sqrt(p * (1 - p) * (1/n1 + 1/n2))
+    se = sqrt(p * (1 - p) * (1/n1 + 1/n2)) + 1e-6
     p1 = c1/n1
     p2 = c2/n2
     z = (p1 - p2) / se

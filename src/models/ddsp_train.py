@@ -140,7 +140,6 @@ def main(
                     sample_rate=sample_rate,
                     checkpoint_dir=f"{os.path.basename(save_dir)}/{run_name}",
                     step=step + 1,
-                    n_gen=10,
                     synth_params=synth_params_summary,
                     weights=weight_hists,
                     # fad_evaluator=fad_evaluator,

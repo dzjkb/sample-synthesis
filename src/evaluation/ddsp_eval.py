@@ -307,7 +307,7 @@ class NDBEvaluator(evaluators.BaseEvaluator):
         longform_data = pd.concat((longform_trainset, longform_batch), axis=0).reset_index(drop=True)
         sns.barplot(data=longform_data, x="bin", y="count", hue="data", ax=ax)
 
-        summaries.fig_summary("NDB bin proportions", fig, step)
+        summaries.fig_summary(f"NDB bin proportions - step {step}", fig, step)
 
     def _ndb_scalar_summary(self, step):
         bin_to_pval = {c: two_sample_test(
