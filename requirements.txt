@@ -1,6 +1,6 @@
 typing-extensions==3.7.4.3
 numpy==1.19.5
-tensorflow==2.4.3
+tensorflow==2.6.4
 tensorflow-probability==0.12.2
 ddsp==1.4.0
 pandas
