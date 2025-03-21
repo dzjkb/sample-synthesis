@@ -1,16 +1,6 @@
-data/
-!src/data/
-models/
-!src/models/
 *.sublime-project
 *.sublime-workspace
-conf/
 logs/
-*.ipynb
-generated/
-google-research/
-fad_stats/
-frechet_audio_distance/
 
 # === Automatically generated ===
 # Byte-compiled / optimized / DLL files
